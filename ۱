@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحه پرداخت</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Vazirmatn', sans-serif; /* You might need to include a Persian font */
+        }
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .order-summary .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            border: none;
+        }
+        .order-summary .list-group-item:last-child {
+             border-bottom: 1px solid rgba(0,0,0,.125);
+        }
+        .order-summary .list-group-item span:last-child {
+            font-weight: bold;
+        }
+        .payment-source .amount {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .btn-success-custom {
+            background-color: #66bb6a; /* A shade of green */
+            border-color: #66bb6a;
+            color: white;
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1.1rem;
+        }
+        .btn-success-custom:hover {
+            background-color: #5cb860;
+            border-color: #5cb860;
+        }
+        .online-payment .payment-methods img {
+            height: 40px;
+            margin: 0 10px;
+        }
+        .product-item {
+            display: flex;
+            align-items: center;
+        }
+        .product-item img {
+            width: 60px;
+            height: auto;
+            margin-left: 15px;
+            border-radius: 0.25rem;
+        }
+        .product-details {
+            flex-grow: 1;
+        }
+        .product-details .title {
+            font-weight: bold;
+        }
+        .product-details .description {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+         .product-price {
+            font-weight: bold;
+            white-space: nowrap; /* Prevent price from wrapping */
+        }
+        .table > :not(caption) > * > * {
+            padding: 1rem 0.5rem; /* Adjust padding in table cells */
+        }
+         .table th {
+            color: #6c757d; /* Gray out table headers */
+             font-weight: normal;
+             border-bottom: 1px solid #dee2e6;
+        }
+    </style>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/css/vazirmatn.css">
+</head>
+<body>
+
+    <div class="container py-4">
+        <div class="row g-4">
+            <div class="col-md-8">
+                <div class="card mb-4 online-payment">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">پرداخت اینترنتی</h5>
+                            <button class="btn btn-outline-secondary btn-sm">تغییر درگاه پرداخت</button>
+                        </div>
+                        <p class="card-text text-muted">پرداخت آنلاین با تمامی کارت‌های شتابی</p>
+                        <div class="payment-methods text-center py-3">
+                            <img src="placeholder-icon.png" alt="آیکون پرداخت">
+                            <img src="placeholder-icon.png" alt="آیکون پرداخت">
+                            <img src="placeholder-icon.png" alt="آیکون پرداخت">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <thead>
+                                <tr>
+                                    <th scope="col">محصول</th>
+                                    <th scope="col" class="text-start">مبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="product-item">
+                                            <img src="placeholder-product.png" alt="تصویر محصول">
+                                            <div class="product-details">
+                                                <div class="title">افزونه لاگین شو، افزونه ورود و ثبت نام با شماره موبایل</div>
+                                                <div class="description">پشتیبانی شش ماهه (رایگان)</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-start product-price">
+                                        ۳۶۴,۰۰۰ تومان
+                                    </td>
+                                </tr>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card mb-4 order-summary">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">جزئیات سفارش</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <span>۱ مورد</span>
+                                <span>تعداد</span>
+                            </li>
+                             <li class="list-group-item">
+                                <span>۴۵۵,۰۰۰ تومان</span>
+                                <span>قیمت کل</span>
+                            </li>
+                             <li class="list-group-item">
+                                <span class="text-danger">-۹۱,۰۰۰ تومان</span>
+                                <span>تخفیف</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card payment-source">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">مبلغ قابل پرداخت</h5>
+                        <div class="amount">
+                            ۳۶۴,۰۰۰ تومان
+                        </div>
+                        <button class="btn btn-success-custom mb-3">پرداخت و تکمیل سفارش</button>
+                        <small class="d-block text-center text-muted">
+                            در صورت منتقل نشدن به درگاه پرداخت VPN خود را غیرفعال و صفحه را رفرش کنید.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+</body>
+</html>
