@@ -1,0 +1,5 @@
+.disabled-element {
+  opacity: 0.6; /* کم کردن وضوح */
+  pointer-events: none; /* غیرفعال کردن کلیک و اشاره‌گر */
+  cursor: not-allowed; /* تغییر شکل اشاره‌گر ماوس */
+}
