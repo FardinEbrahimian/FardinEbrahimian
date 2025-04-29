@@ -9,80 +9,103 @@ document.addEventListener("DOMContentLoaded", () => {
    const loadingDeliveryDaysEl = document.getElementById("loading-delivery-days");
   const noProductMessageEl = document.getElementById("no-product-message");
   const payButton = document.getElementById("pay-button");
-  const productCardBody = document.querySelector('.col-md-9 .card-body'); // No longer needed for header
+  // productCardBody دیگر برای درج هدر استفاده نمی شود، اما نگه داشته شده است اگر نیازهای دیگری داشته باشید
+  const productCardBody = document.querySelector('.col-md-9 .card-body');
+
 
   let productsData = []; // Store the initial product data from API
   let discountPerItem = 0;
 
   // --- Simulated API Calls ---
+  // NOTE: Replace these URLs with your actual API endpoints when connecting to a backend
+
   async function fetchProducts() {
+    console.log("Fetching products...");
+    // Simulate fetching product data from an API
     return new Promise(resolve => {
       setTimeout(() => {
+        // Example data (can be an empty array to test the no-product scenario)
         const data = [
           {
             id: 1,
             name: "اسپرسو ساز فیلیپس اتوماتیک سایکو",
             description: "گارانتی اصالت و سلامت فیزیکی کالا",
             price: 17800000,
-            image: "./images/و-قیمت-اسپرسو-ساز-فیلیپس-اتوماتیک-سایکو-مدل-Saeco-SM878500-Xelsico-Deluxe-3.webp" // Corrected image name based on original HTML
+            image: "./images/و-قیمت-اسپرسو-ساز-فیلیپس-اتوماتیک-سایکو-مدل-Saeco-SM878500-Xelsis-Deluxe-3.webp" // Corrected image name based on original HTML
           }
            ,
             {
               id: 2,
               name: "محصول نمونه دیگر",
-              description: "توضیحات محصول دوم",
+              description: "توضیحات محصول دوم برای تست لیست",
               price: 5000000,
               image: "https://via.placeholder.com/100" // Placeholder image
             }
+             ,
+            {
+              id: 3,
+              name: "محصول سوم تستی",
+              description: "توضیحات کوتاه محصول سوم",
+              price: 2500000,
+              image: "https://via.placeholder.com/100/FF0000" // Another placeholder image
+            }
 
         ];
-        // const data = []; // Uncomment to simulate no products
+        // const data = []; // Uncomment this line to simulate no products fetched
         resolve(data);
-      }, 500);
+      }, 700); // Simulate network delay
     });
   }
 
   async function fetchDiscount() {
+     console.log("Fetching discount...");
+    // Simulate fetching discount data from an API
     return new Promise(resolve => {
       setTimeout(() => {
         const data = { discountPerItem: 280000 }; // Discount is per item (product type)
+         // const data = { discountPerItem: 0 }; // Uncomment to simulate no discount
         resolve(data);
-      }, 300);
+      }, 400); // Simulate network delay
     });
   }
 
   async function fetchDeliveryDays() {
+     console.log("Fetching delivery days...");
+    // Simulate fetching delivery days data from an API
     return new Promise(resolve => {
       setTimeout(() => {
+        // Example data (can be an empty array to test the no-delivery-days scenario when products exist)
         const data = [
           { dayOfWeek: "شنبه", date: "۷ بهمن" },
           { dayOfWeek: "یکشنبه", date: "۸ بهمن" },
           { dayOfWeek: "دوشنبه", date: "۹ بهمن" }
         ];
-        // const data = []; // Uncomment to simulate no delivery days
+        // const data = []; // Uncomment this line to simulate no delivery days fetched
         resolve(data);
-      }, 400);
+      }, 500); // Simulate network delay
     });
   }
 
   // --- Rendering Functions ---
 
   function renderProducts(productsToRender) {
-    // Clear the header and product list
+    // Clear the old static header if it exists (should be removed from HTML ideally)
     const existingHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
-    if(existingHeader) existingHeader.remove(); // Remove old header if exists
+    if(existingHeader) {
+         console.warn("Static product header found in HTML. It should be removed.");
+        existingHeader.remove();
+    }
 
     productListEl.innerHTML = ""; // Clear current content
-
-    loadingProductsEl.style.display = "none";
+    loadingProductsEl.style.display = "none"; // Hide the initial loading message
 
     if (productsToRender && productsToRender.length > 0) {
       productsToRender.forEach(product => {
         const productHtml = `
           <div class="product-item card mb-3" data-product-id="${product.id}">
-            <div class="card-body d-flex align-items-center justify-content-between">
+            <div class="card-body d-flex align-items-center justify-content-between p-3"> {/* Added padding */}
               <div class="d-flex align-items-center">
-                 <img src="${product.image}" alt="تصویر محصول" width="100" height="100" class="me-3">
+                 <img src="${product.image}" alt="تصویر محصول" width="100" height="100" class="me-3 rounded"> {/* Added rounded corners to image */}
                  <div>
                     <div class="title fw-bold">${product.name}</div>
                     <div class="description text-muted small">${product.description}</div>
@@ -91,9 +114,9 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="d-flex flex-column align-items-end ms-3">
                 <span class="product-price fw-bold">${new Intl.NumberFormat("fa-IR").format(product.price)} تومان</span>
                  <div class="d-flex align-items-center mt-2 product-quantity-controls">
-                  <button class="bg-transparent border border-danger-subtle rounded-circle px-2 minusBtn">-</button>
-                  <div class="d-inline mx-1"><span class="product-quantity">1</span></div> مورد
-                  <button class="bg-transparent border border-danger-subtle rounded-circle px-2 plusBtn">+</button>
+                  <button class="btn btn-outline-secondary btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center minusBtn" style="width:24px; height:24px;">-</button> {/* Styled buttons */}
+                  <div class="d-inline mx-2"><span class="product-quantity">1</span></div> مورد
+                  <button class="btn btn-outline-secondary btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center plusBtn" style="width:24px; height:24px;">+</button> {/* Styled buttons */}
                 </div>
               </div>
               <button type="button" class="btn-close ms-3 remove-product-btn" aria-label="حذف محصول" data-product-id="${product.id}"></button>
@@ -108,6 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
        addCloseButtonListeners();
        enableOrderControls(); // Enable buttons now that products are rendered
     } else {
+      // If no products to render
       productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
       disableOrderControls(); // No products, disable controls
     }
@@ -116,8 +140,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   function renderDeliveryDays(daysToRender) {
-     deliveryDaysContainerEl.innerHTML = "";
-     loadingDeliveryDaysEl.style.display = "none";
+     deliveryDaysContainerEl.innerHTML = ""; // Clear current content
+     loadingDeliveryDaysEl.style.display = "none"; // Hide loading message
+
 
     if (daysToRender && daysToRender.length > 0) {
       const daysHtml = daysToRender.map(day => `
@@ -151,10 +176,14 @@ document.addEventListener("DOMContentLoaded", () => {
               const price = parseInt(priceText, 10);
 
               if (!isNaN(quantity) && !isNaN(price)) {
-                  totalItemsCount += quantity;
+                  totalItemsCount += quantity; // Keep track of total number of items across all products
                   calculatedTotalPrice += price * quantity;
                   calculatedTotalDiscount += discountPerItem * quantity;
+              } else {
+                   console.warn("Could not parse quantity or price for item:", item);
               }
+          } else {
+               console.warn("Quantity or price span not found for item:", item);
           }
       });
 
@@ -165,29 +194,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const finalPrice = calculatedTotalPrice - calculatedTotalDiscount;
     orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(finalPrice);
 
-    // Disable pay button if no product items remain in the list
-    if (productItems.length === 0 || calculatedTotalPrice === 0) {
+    // Disable pay button if no product items remain in the list (visible in DOM)
+    if (productItems.length === 0 || calculatedTotalPrice <= 0) { // Also check if total price is 0 or less
       payButton.classList.add('disabled');
       payButton.style.pointerEvents = 'none';
-         // Trigger the "no product" state if all items removed
+         // Trigger the "no product" state if all items removed or total is 0
          handleNoProductState();
     } else {
        payButton.classList.remove('disabled');
        payButton.style.pointerEvents = 'auto';
-        // Ensure "no product" state is hidden if items exist
+        // Ensure "no product" state is hidden if items exist and total is positive
         noProductMessageEl.style.display = 'none';
-        deliveryDaysCardEl.style.display = 'block'; // Assuming delivery days were fetched already or will be handled elsewhere
+        deliveryDaysCardEl.style.display = 'block'; // Assuming delivery days were fetched successfully initially
     }
   }
 
    // --- Control Button States ---
-   // These functions are now less relevant as buttons are per item, but keep for consistency
+   // These functions now target buttons within each product item
   function enableOrderControls() {
      // Find all plus/minus buttons and enable them
      const plusBtns = productListEl.querySelectorAll('.plusBtn');
      const minusBtns = productListEl.querySelectorAll('.minusBtn');
      plusBtns.forEach(btn => btn.disabled = false);
      minusBtns.forEach(btn => btn.disabled = false);
+      console.log("Order controls enabled.");
   }
 
   function disableOrderControls() {
@@ -196,15 +226,17 @@ document.addEventListener("DOMContentLoaded", () => {
      const minusBtns = productListEl.querySelectorAll('.minusBtn');
      plusBtns.forEach(btn => btn.disabled = true);
      minusBtns.forEach(btn => btn.disabled = true);
+      console.log("Order controls disabled.");
   }
 
   // --- Handle No Product State ---
   function handleNoProductState() {
+      console.log("Handling no product state...");
       discountPerItem = 0; // Reset discount if no products
       deliveryDaysCardEl.style.display = 'none';
       noProductMessageEl.style.display = 'block';
-      loadingDeliveryDaysEl.style.display = 'none';
-      deliveryDaysContainerEl.innerHTML = "";
+      loadingDeliveryDaysEl.style.display = 'none'; // Ensure loading is hidden
+      deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days content
       updatePrices(); // Ensure prices are 0
       disableOrderControls(); // Disable any potential controls (though they shouldn't exist)
   }
@@ -212,15 +244,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Event Listeners ---
 
-   const optionItems = document.querySelectorAll(".option-item");
+   // Payment Option Styling (remains the same)
+  const optionItems = document.querySelectorAll(".option-item");
   optionItems.forEach((item) => {
     item.addEventListener("click", function () {
       optionItems.forEach((opt) => (opt.style.backgroundColor = ""));
-      this.style.backgroundColor = "#3B82F6";
+      this.style.backgroundColor = "#3B82F6"; // Highlight selected
     });
   });
 
 
+  // Delivery Day Styling (Needs to be called after rendering days)
   function addDeliveryDayEventListeners() {
      const deliveryButtons = document.querySelectorAll(".delivery-day");
       deliveryButtons.forEach((button) => {
@@ -234,6 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
           button.classList.add("bg-primary", "text-white", "border-0");
         });
       });
+       console.log("Delivery day listeners added.");
   }
 
     // Quantity Buttons Event Listeners (Attached after rendering products)
@@ -242,41 +277,57 @@ document.addEventListener("DOMContentLoaded", () => {
         const plusBtns = productListEl.querySelectorAll('.plusBtn');
         const minusBtns = productListEl.querySelectorAll('.minusBtn');
 
+        // Add listeners to plus buttons
         plusBtns.forEach(button => {
              // Remove existing listeners to prevent duplicates if renderProducts is called again
-            const oldListener = button.dataset.listener;
-            if(oldListener) button.removeEventListener('click', window[oldListener]);
+             // A more robust approach for production might involve event delegation
+             const oldListener = button.dataset.plusListener;
+            if(oldListener && window[oldListener]) {
+                 button.removeEventListener('click', window[oldListener]);
+                 window[oldListener] = null; // Clean up the global reference
+             }
 
             const newListener = (event) => {
-                const quantitySpan = event.target.parentElement.querySelector('.product-quantity');
+                const quantitySpan = event.target.closest('.product-quantity-controls').querySelector('.product-quantity'); // Find span within its controls container
                  if (!quantitySpan) return; // Safety check
                 let currentQuantity = parseInt(quantitySpan.textContent, 10);
                 currentQuantity++;
                 quantitySpan.textContent = currentQuantity;
                 updatePrices();
             };
+            // Assign a unique name and store it globally for removal
+            const listenerName = 'plusListener_' + Math.random().toString(36).substr(2, 9);
+            window[listenerName] = newListener;
             button.addEventListener("click", newListener);
-            button.dataset.listener = 'plus' + button.dataset.productId; // Store a unique listener name (requires product ID)
+            button.dataset.plusListener = listenerName;
         });
 
+         // Add listeners to minus buttons
          minusBtns.forEach(button => {
             // Remove existing listeners
-             const oldListener = button.dataset.listener;
-            if(oldListener) button.removeEventListener('click', window[oldListener]);
+            const oldListener = button.dataset.minusListener;
+             if(oldListener && window[oldListener]) {
+                 button.removeEventListener('click', window[oldListener]);
+                 window[oldListener] = null; // Clean up the global reference
+             }
 
             const newListener = (event) => {
-                 const quantitySpan = event.target.parentElement.querySelector('.product-quantity');
+                 const quantitySpan = event.target.closest('.product-quantity-controls').querySelector('.product-quantity'); // Find span within its controls container
                  if (!quantitySpan) return; // Safety check
                  let currentQuantity = parseInt(quantitySpan.textContent, 10);
-                if (currentQuantity > 1) {
+                if (currentQuantity > 1) { // Prevent quantity from going below 1
                     currentQuantity--;
                     quantitySpan.textContent = currentQuantity;
                     updatePrices();
                 }
             };
+             // Assign a unique name and store it globally for removal
+            const listenerName = 'minusListener_' + Math.random().toString(36).substr(2, 9);
+            window[listenerName] = newListener;
             button.addEventListener("click", newListener);
-             button.dataset.listener = 'minus' + button.dataset.productId; // Store unique listener name (requires product ID)
+            button.dataset.minusListener = listenerName;
         });
+        console.log("Quantity control listeners added.");
     }
 
     // Close Button Event Listeners (Attached after rendering products)
@@ -285,8 +336,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         removeButtons.forEach(button => {
              // Remove existing listeners
-             const oldListener = button.dataset.listener;
-            if(oldListener) button.removeEventListener('click', window[oldListener]);
+             const oldListener = button.dataset.removeListener;
+             if(oldListener && window[oldListener]) {
+                 button.removeEventListener('click', window[oldListener]);
+                 window[oldListener] = null; // Clean up the global reference
+             }
 
             const newListener = (event) => {
                 const productIdToRemove = event.target.dataset.productId;
@@ -294,54 +348,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if(productItemEl) {
                     productItemEl.remove(); // Remove the product element from the DOM
+                    console.log(`Product with ID ${productIdToRemove} removed.`);
                     updatePrices(); // Recalculate totals
-                    // Check if the list is now empty
-                    if(productListEl.querySelectorAll('.product-item').length === 0) {
-                        handleNoProductState(); // Trigger no product state
-                    }
+                    // Check if the list is now empty - updatePrices already calls handleNoProductState
                 }
             };
+             // Assign a unique name and store it globally for removal
+            const listenerName = 'removeListener_' + Math.random().toString(36).substr(2, 9);
+            window[listenerName] = newListener;
             button.addEventListener("click", newListener);
-             button.dataset.listener = 'remove' + button.dataset.productId; // Store unique listener name (requires product ID)
+            button.dataset.removeListener = listenerName;
         });
+         console.log("Close button listeners added.");
     }
 
 
   // --- Initial Data Fetch and Rendering ---
 
   async function initializePage() {
-    disableOrderControls();
+    console.log("Initializing page...");
+    disableOrderControls(); // Ensure buttons are disabled initially
     updatePrices(); // Sets prices to 0 initially
     deliveryDaysCardEl.style.display = 'none';
     noProductMessageEl.style.display = 'block';
      loadingDeliveryDaysEl.style.display = 'block';
-     // Clear any static header that might be in the HTML
+     // Clear any static header that might be in the HTML - important for the new layout
      const staticHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
      if(staticHeader) staticHeader.remove();
 
 
     try {
+      // Fetch Products first
       productsData = await fetchProducts(); // Store fetched data globally if needed elsewhere
+      console.log("Products fetched:", productsData);
+
 
       if (productsData && productsData.length > 0) {
-        renderProducts(productsData); // Render products with quantity controls and close buttons
+         renderProducts(productsData); // Render products with quantity controls and close buttons
+          console.log("Products rendered.");
 
+        // If products were fetched successfully, fetch discount and delivery days
         try {
             const discountData = await fetchDiscount();
             discountPerItem = discountData.discountPerItem || 0;
+             console.log("Discount fetched:", discountPerItem);
         } catch (discountError) {
              console.error("Could not fetch discount, using default 0:", discountError);
-             discountPerItem = 0;
+             discountPerItem = 0; // Default to 0 if discount fetch fails
         }
 
         try {
             const deliveryDays = await fetchDeliveryDays();
             renderDeliveryDays(deliveryDays);
-             loadingDeliveryDaysEl.style.display = 'none';
+             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading after fetching days
+              console.log("Delivery days fetched:", deliveryDays);
         } catch (deliveryError) {
              console.error("Could not fetch delivery days:", deliveryError);
-             renderDeliveryDays([]);
-             loadingDeliveryDaysEl.style.display = 'none';
+             renderDeliveryDays([]); // Render empty state for delivery days
+             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading even on error
         }
 
         // Only show delivery days and hide no product message if products were initially loaded
@@ -351,21 +415,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       } else {
-        // If no products initially fetched
+        // If no products initially fetched or an error occurred during product fetch
+        console.log("No products fetched or error occurred.");
         handleNoProductState(); // Trigger no product state
         productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>"; // Show message in product area
       }
 
     } catch (error) {
-      console.error("Critical error during page initialization:", error);
+      console.error("Critical error during page initialization (e.g., product fetch failed):", error);
        // Handle critical errors (e.g., product fetch failed)
-      const existingHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
+       // Ensure the old static header is removed if it exists
+       const existingHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
         if(existingHeader) existingHeader.remove();
+
       productListEl.innerHTML = "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات. لطفا مجددا تلاش کنید.</div>";
       loadingProductsEl.style.display = "none";
        handleNoProductState(); // Trigger no product state on error
     }
   }
 
-  initializePage();
+  initializePage(); // Call the function to start the process on page load
 });
