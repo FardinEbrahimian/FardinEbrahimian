@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // NOTE: Replace these URLs with your actual API endpoints when connecting to a backend
 
   async function fetchProducts() {
-    console.log("Fetching products...");
+    console.log("-> Fetching products...");
     // Simulate fetching product data from an API
     return new Promise(resolve => {
       setTimeout(() => {
@@ -50,26 +50,28 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
         ];
-        // const data = []; // Uncomment this line to simulate no products fetched
+         //const data = []; // Uncomment this line to simulate no products fetched
+        console.log("<- Fetching products resolved with data:", data);
         resolve(data);
       }, 700); // Simulate network delay
     });
   }
 
   async function fetchDiscount() {
-     console.log("Fetching discount...");
+     console.log("-> Fetching discount...");
     // Simulate fetching discount data from an API
     return new Promise(resolve => {
       setTimeout(() => {
         const data = { discountPerItem: 280000 }; // Discount is per item (product type)
          // const data = { discountPerItem: 0 }; // Uncomment to simulate no discount
+         console.log("<- Fetching discount resolved with data:", data);
         resolve(data);
       }, 400); // Simulate network delay
     });
   }
 
   async function fetchDeliveryDays() {
-     console.log("Fetching delivery days...");
+     console.log("-> Fetching delivery days...");
     // Simulate fetching delivery days data from an API
     return new Promise(resolve => {
       setTimeout(() => {
@@ -80,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
           { dayOfWeek: "دوشنبه", date: "۹ بهمن" }
         ];
         // const data = []; // Uncomment this line to simulate no delivery days fetched
+         console.log("<- Fetching delivery days resolved with data:", data);
         resolve(data);
       }, 500); // Simulate network delay
     });
@@ -88,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Rendering Functions ---
 
   function renderProducts(productsToRender) {
+    console.log("-> Entering renderProducts");
     // Clear the old static header if it exists (should be removed from HTML ideally)
     const existingHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
     if(existingHeader) {
@@ -135,10 +139,12 @@ document.addEventListener("DOMContentLoaded", () => {
       disableOrderControls(); // No products, disable controls
     }
      updatePrices(); // Update totals based on rendered products
+     console.log("<- Exiting renderProducts");
   }
 
 
   function renderDeliveryDays(daysToRender) {
+     console.log("-> Entering renderDeliveryDays");
      deliveryDaysContainerEl.innerHTML = ""; // Clear current content
      loadingDeliveryDaysEl.style.display = "none"; // Hide loading message
 
@@ -154,12 +160,13 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       deliveryDaysContainerEl.innerHTML = "<div class='text-center py-3'>روز تحویلی در دسترس نیست.</div>";
     }
+     console.log("<- Exiting renderDeliveryDays");
   }
 
   // --- Update Order Details and Payment ---
 
   function updatePrices() {
-      console.log("updatePrices called"); // Add this line to check if it's called
+      console.log("-> Entering updatePrices"); // Added log
       const productItems = productListEl.querySelectorAll('.product-item'); // Get all product items currently in DOM
       let totalItemsCount = 0;
       let calculatedTotalPrice = 0;
@@ -179,12 +186,12 @@ document.addEventListener("DOMContentLoaded", () => {
                   totalItemsCount += quantity; // Keep track of total number of items across all products
                   calculatedTotalPrice += price * quantity; // Summing price * quantity for THIS item
                   calculatedTotalDiscount += discountPerItem * quantity; // Summing discount * quantity for THIS item
-                   console.log(`Item ID: ${item.dataset.productId}, Quantity: ${quantity}, Price: ${price}, Item Total: ${price * quantity}`); // Log per item
+                   //console.log(`Item ID: ${item.dataset.productId}, Quantity: ${quantity}, Price: ${price}, Item Total: ${price * quantity}`); // Log per item - uncomment for detailed debug
               } else {
-                   console.warn("Could not parse quantity or price for item:", item);
+                   console.warn(`Could not parse quantity or price for item ID: ${item.dataset.productId}`);
               }
           } else {
-               console.warn("Quantity or price span not found for item:", item);
+               console.warn(`Quantity or price span not found for item ID: ${item.dataset.productId}`);
           }
       });
 
@@ -200,42 +207,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Disable pay button if no product items remain in the list (visible in DOM) or total price is 0 or less
     if (productItems.length === 0 || calculatedTotalPrice <= 0) {
+      console.log("updatePrices: Condition met for 'no product state' logic."); // Added log
       payButton.classList.add('disabled');
       payButton.style.pointerEvents = 'none';
-         // *** FIX: Removed the call to handleNoProductState() from here ***
-         // handleNoProductState() is now ONLY called when the LAST item is removed or on initial load failure.
+         // *** THIS CALL IS REMOVED. handleNoProductState() must NOT be called from here. ***
+         // It is called from addCloseButtonListeners when the last item is removed,
+         // and from initializePage on initial load failure/no products.
     } else {
+       console.log("updatePrices: Condition not met for 'no product state' logic."); // Added log
        payButton.classList.remove('disabled');
        payButton.style.pointerEvents = 'auto';
         // Ensure "no product" state is hidden if items exist and total is positive
         noProductMessageEl.style.display = 'none';
         deliveryDaysCardEl.style.display = 'block'; // Assuming delivery days were fetched successfully initially
     }
+     console.log("<- Exiting updatePrices"); // Added log
   }
 
    // --- Control Button States ---
    // These functions now target buttons within each product item
   function enableOrderControls() {
+     console.log("-> Entering enableOrderControls");
      // Find all plus/minus buttons and enable them
      const plusBtns = productListEl.querySelectorAll('.plusBtn');
      const minusBtns = productListEl.querySelectorAll('.minusBtn');
      plusBtns.forEach(btn => btn.disabled = false);
      minusBtns.forEach(btn => btn.disabled = false);
-      console.log("Order controls enabled.");
+      console.log("<- Order controls enabled.");
   }
 
   function disableOrderControls() {
+       console.log("-> Entering disableOrderControls");
        // Find all plus/minus buttons and disable them
      const plusBtns = productListEl.querySelectorAll('.plusBtn');
      const minusBtns = productListEl.querySelectorAll('.minusBtn');
      plusBtns.forEach(btn => btn.disabled = true);
      minusBtns.forEach(btn => btn.disabled = true);
-      console.log("Order controls disabled.");
+      console.log("<- Order controls disabled.");
   }
 
   // --- Handle No Product State ---
   function handleNoProductState() {
-      console.log("Handling no product state...");
+      console.log("-> Entering handleNoProductState"); // Added log
       discountPerItem = 0; // Reset discount if no products
       deliveryDaysCardEl.style.display = 'none';
       noProductMessageEl.style.display = 'block';
@@ -243,6 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
       deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days content
       updatePrices(); // Ensure prices are 0 - This call is correct here
       disableOrderControls(); // Disable any potential controls (though they shouldn't exist)
+      console.log("<- Exiting handleNoProductState"); // Added log
   }
 
 
@@ -254,12 +268,14 @@ document.addEventListener("DOMContentLoaded", () => {
     item.addEventListener("click", function () {
       optionItems.forEach((opt) => (opt.style.backgroundColor = ""));
       this.style.backgroundColor = "#3B82F6"; // Highlight selected
+       console.log("Payment option clicked.");
     });
   });
 
 
   // Delivery Day Styling (Needs to be called after rendering days)
   function addDeliveryDayEventListeners() {
+     console.log("-> Entering addDeliveryDayEventListeners");
      const deliveryButtons = document.querySelectorAll(".delivery-day");
       deliveryButtons.forEach((button) => {
         button.addEventListener("click", () => {
@@ -270,13 +286,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
           button.classList.remove("bg-transparent", "border-dark-subtle");
           button.classList.add("bg-primary", "text-white", "border-0");
+          console.log("Delivery day selected.");
         });
       });
-       console.log("Delivery day listeners added.");
+       console.log("<- Delivery day listeners added.");
   }
 
     // Quantity Buttons Event Listeners (Attached after rendering products)
     function addQuantityControlListeners() {
+        console.log("-> Entering addQuantityControlListeners");
         // Find all plus/minus buttons in the product list
         const plusBtns = productListEl.querySelectorAll('.plusBtn');
         const minusBtns = productListEl.querySelectorAll('.minusBtn');
@@ -298,6 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentQuantity++;
                 quantitySpan.textContent = currentQuantity;
                 updatePrices(); // Recalculate totals after quantity change
+                 console.log("Plus button clicked.");
             };
             // Assign a unique name and store it globally for removal
             const listenerName = 'plusListener_' + Math.random().toString(36).substr(2, 9);
@@ -323,6 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     currentQuantity--;
                     quantitySpan.textContent = currentQuantity;
                     updatePrices(); // Recalculate totals after quantity change
+                     console.log("Minus button clicked.");
                 }
             };
              // Assign a unique name and store it globally for removal
@@ -331,11 +351,12 @@ document.addEventListener("DOMContentLoaded", () => {
             button.addEventListener("click", newListener);
             button.dataset.minusListener = listenerName;
         });
-        console.log("Quantity control listeners added.");
+        console.log("<- Quantity control listeners added.");
     }
 
     // Close Button Event Listeners (Attached after rendering products)
     function addCloseButtonListeners() {
+        console.log("-> Entering addCloseButtonListeners");
         const removeButtons = productListEl.querySelectorAll('.remove-product-btn');
 
         removeButtons.forEach(button => {
@@ -354,8 +375,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     productItemEl.remove(); // Remove the product element from the DOM
                     console.log(`Product with ID ${productIdToRemove} removed.`);
                     updatePrices(); // Recalculate totals after removal
-                    // The check for empty list and calling handleNoProductState is now correctly done inside updatePrices
+                    // Check if the list is now empty - updatePrices calls handleNoProductState if needed
+                    if(productListEl.querySelectorAll('.product-item').length === 0) {
+                        console.log("Last product removed. Calling handleNoProductState.");
+                        handleNoProductState(); // Correct place to call when the list becomes empty
+                    }
                 }
+                 console.log("Remove button clicked.");
             };
              // Assign a unique name and store it globally for removal
             const listenerName = 'removeListener_' + Math.random().toString(36).substr(2, 9);
@@ -363,14 +389,14 @@ document.addEventListener("DOMContentLoaded", () => {
             button.addEventListener("click", newListener);
             button.dataset.removeListener = listenerName;
         });
-         console.log("Close button listeners added.");
+         console.log("<- Close button listeners added.");
     }
 
 
   // --- Initial Data Fetch and Rendering ---
 
   async function initializePage() {
-    console.log("Initializing page...");
+    console.log("-> Initializing page...");
     disableOrderControls(); // Ensure buttons are disabled initially
     updatePrices(); // Sets prices to 0 initially
     deliveryDaysCardEl.style.display = 'none';
@@ -439,6 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loadingProductsEl.style.display = "none";
        handleNoProductState(); // Trigger no product state on error
     }
+     console.log("<- Initializing page finished.");
   }
 
   initializePage(); // Call the function to start the process on page load
