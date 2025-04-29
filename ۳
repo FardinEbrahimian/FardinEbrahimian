@@ -15,6 +15,26 @@ document.addEventListener("DOMContentLoaded", () => {
   let productsData = []; // Store the initial product data from API
   let discountPerItem = 0;
 
+  // --- Helper function to convert Persian digits to ASCII digits ---
+  const persianToAsciiDigits = (text) => {
+      const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+      const asciiDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+      let result = '';
+      for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          const persianIndex = persianDigits.indexOf(char);
+          if (persianIndex > -1) {
+              result += asciiDigits[persianIndex];
+          } else {
+               // Keep characters that are not Persian digits (e.g., ASCII digits, commas, etc.)
+              result += char;
+          }
+      }
+      return result;
+  };
+  // --- End Helper function ---
+
+
   // --- Simulated API Calls ---
   // NOTE: Replace these URLs with your actual API endpoints when connecting to a backend
 
@@ -29,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
             id: 1,
             name: "اسپرسو ساز فیلیپس اتوماتیک سایکو",
             description: "گارانتی اصالت و سلامت فیزیکی کالا",
-            price: 17800000,
+            price: 17800000, // Using standard numbers in JS data is fine
             image: "./images/و-قیمت-اسپرسو-ساز-فیلیپس-اتوماتیک-سایکو-مدل-Saeco-SM878500-Xelsis-Deluxe-3.webp" // Corrected image name based on original HTML
           }
            ,
@@ -178,10 +198,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if(quantitySpan && priceSpan) {
               const quantity = parseInt(quantitySpan.textContent, 10);
-               // --- FIX: More robust price parsing ---
+
+               // --- FIX: Use helper to convert Persian digits and then remove non-digits ---
                const priceText = priceSpan.textContent;
-               // Remove ALL non-digit characters from the price text
-               const cleanedPriceText = priceText.replace(/\D/g, '');
+               const textWithAsciiDigits = persianToAsciiDigits(priceText); // Convert Persian to ASCII digits
+               // Now remove all non-digit characters (which are now standard \D matches)
+               const cleanedPriceText = textWithAsciiDigits.replace(/\D/g, '');
                const price = parseInt(cleanedPriceText, 10);
                // --- End FIX ---
 
@@ -192,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   calculatedTotalDiscount += discountPerItem * quantity; // Summing discount * quantity for THIS item
                    console.log(`Item ID: ${item.dataset.productId || 'N/A'}, Quantity: ${quantity}, Price: ${price}, Item Total: ${price * quantity}`); // Log per item
               } else {
-                   console.warn(`Could not parse quantity or price for item ID: ${item.dataset.productId || 'N/A'}. Quantity text: "${quantitySpan.textContent}", Price text: "${priceSpan.textContent}". Cleaned price text: "${cleanedPriceText}"`);
+                   console.warn(`Could not parse quantity or price for item ID: ${item.dataset.productId || 'N/A'}. Quantity text: "${quantitySpan.textContent}", Price text: "${priceSpan.textContent}". Cleaned price text (after Persian conversion and non-digit removal): "${cleanedPriceText}". Parsed Price is NaN: ${isNaN(price)}`);
               }
           } else {
                console.warn(`Quantity or price span not found for item ID: ${item.dataset.productId || 'N/A'}`);
