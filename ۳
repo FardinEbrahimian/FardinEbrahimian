@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
         ];
-         //const data = []; // Uncomment this line to simulate no products fetched
+        // const data = []; // Uncomment this line to simulate no products fetched
         console.log("<- Fetching products resolved with data:", data);
         resolve(data);
       }, 700); // Simulate network delay
@@ -186,12 +186,12 @@ document.addEventListener("DOMContentLoaded", () => {
                   totalItemsCount += quantity; // Keep track of total number of items across all products
                   calculatedTotalPrice += price * quantity; // Summing price * quantity for THIS item
                   calculatedTotalDiscount += discountPerItem * quantity; // Summing discount * quantity for THIS item
-                   //console.log(`Item ID: ${item.dataset.productId}, Quantity: ${quantity}, Price: ${price}, Item Total: ${price * quantity}`); // Log per item - uncomment for detailed debug
+                   console.log(`Item ID: ${item.dataset.productId || 'N/A'}, Quantity: ${quantity}, Price: ${price}, Item Total: ${price * quantity}`); // Log per item
               } else {
-                   console.warn(`Could not parse quantity or price for item ID: ${item.dataset.productId}`);
+                   console.warn(`Could not parse quantity or price for item ID: ${item.dataset.productId || 'N/A'}. Quantity text: "${quantitySpan.textContent}", Price text: "${priceSpan.textContent}"`);
               }
           } else {
-               console.warn(`Quantity or price span not found for item ID: ${item.dataset.productId}`);
+               console.warn(`Quantity or price span not found for item ID: ${item.dataset.productId || 'N/A'}`);
           }
       });
 
@@ -199,36 +199,55 @@ document.addEventListener("DOMContentLoaded", () => {
        console.log("Total Calculated Discount:", calculatedTotalDiscount); // Log total calculation
 
 
-    // orderQuantityEl is removed, not updating a total count in order summary list
-    orderTotalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(calculatedTotalPrice) + " تومان";
-    orderDiscountEl.textContent = new Intl.NumberFormat("fa-IR").format(calculatedTotalDiscount) + " تومان";
+    // Check if elements for displaying prices exist before updating
+    if (orderTotalPriceEl) {
+        orderTotalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(calculatedTotalPrice) + " تومان";
+    } else {
+        console.error("Element with id 'order-total-price' not found!");
+    }
+
+    if (orderDiscountEl) {
+        orderDiscountEl.textContent = new Intl.NumberFormat("fa-IR").format(calculatedTotalDiscount) + " تومان";
+    } else {
+         console.error("Element with id 'order-discount' not found!");
+    }
+
     const finalPrice = calculatedTotalPrice - calculatedTotalDiscount;
-    orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(finalPrice);
+     if (orderFinalPriceEl) {
+        orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(finalPrice);
+     } else {
+         console.error("Element with id 'order-final-price' not found!");
+     }
+
 
     // Disable pay button if no product items remain in the list (visible in DOM) or total price is 0 or less
     if (productItems.length === 0 || calculatedTotalPrice <= 0) {
-      console.log("updatePrices: Condition met for 'no product state' logic."); // Added log
-      payButton.classList.add('disabled');
-      payButton.style.pointerEvents = 'none';
-         // *** THIS CALL IS REMOVED. handleNoProductState() must NOT be called from here. ***
-         // It is called from addCloseButtonListeners when the last item is removed,
-         // and from initializePage on initial load failure/no products.
+      console.log("updatePrices: Condition met for 'no product state' logic.");
+      if (payButton) {
+          payButton.classList.add('disabled');
+          payButton.style.pointerEvents = 'none';
+      } else {
+           console.error("Pay button not found!");
+      }
+         // handleNoProductState() is NOT called from here.
     } else {
-       console.log("updatePrices: Condition not met for 'no product state' logic."); // Added log
-       payButton.classList.remove('disabled');
-       payButton.style.pointerEvents = 'auto';
+       console.log("updatePrices: Condition not met for 'no product state' logic.");
+       if (payButton) {
+           payButton.classList.remove('disabled');
+           payButton.style.pointerEvents = 'auto';
+       } else {
+            console.error("Pay button not found!");
+       }
         // Ensure "no product" state is hidden if items exist and total is positive
         noProductMessageEl.style.display = 'none';
         deliveryDaysCardEl.style.display = 'block'; // Assuming delivery days were fetched successfully initially
     }
-     console.log("<- Exiting updatePrices"); // Added log
+     console.log("<- Exiting updatePrices");
   }
 
    // --- Control Button States ---
-   // These functions now target buttons within each product item
   function enableOrderControls() {
      console.log("-> Entering enableOrderControls");
-     // Find all plus/minus buttons and enable them
      const plusBtns = productListEl.querySelectorAll('.plusBtn');
      const minusBtns = productListEl.querySelectorAll('.minusBtn');
      plusBtns.forEach(btn => btn.disabled = false);
@@ -238,7 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function disableOrderControls() {
        console.log("-> Entering disableOrderControls");
-       // Find all plus/minus buttons and disable them
      const plusBtns = productListEl.querySelectorAll('.plusBtn');
      const minusBtns = productListEl.querySelectorAll('.minusBtn');
      plusBtns.forEach(btn => btn.disabled = true);
@@ -248,32 +266,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Handle No Product State ---
   function handleNoProductState() {
-      console.log("-> Entering handleNoProductState"); // Added log
+      console.log("-> Entering handleNoProductState");
       discountPerItem = 0; // Reset discount if no products
       deliveryDaysCardEl.style.display = 'none';
       noProductMessageEl.style.display = 'block';
-      loadingDeliveryDaysEl.style.display = 'none'; // Ensure loading is hidden
-      deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days content
+      loadingDeliveryDaysEl.style.display = 'none';
+      deliveryDaysContainerEl.innerHTML = "";
       updatePrices(); // Ensure prices are 0 - This call is correct here
-      disableOrderControls(); // Disable any potential controls (though they shouldn't exist)
-      console.log("<- Exiting handleNoProductState"); // Added log
+      disableOrderControls();
+      console.log("<- Exiting handleNoProductState");
   }
 
 
   // --- Event Listeners ---
 
-   // Payment Option Styling (remains the same)
-  const optionItems = document.querySelectorAll(".option-item");
+   const optionItems = document.querySelectorAll(".option-item");
   optionItems.forEach((item) => {
     item.addEventListener("click", function () {
       optionItems.forEach((opt) => (opt.style.backgroundColor = ""));
-      this.style.backgroundColor = "#3B82F6"; // Highlight selected
+      this.style.backgroundColor = "#3B82F6";
        console.log("Payment option clicked.");
     });
   });
 
 
-  // Delivery Day Styling (Needs to be called after rendering days)
   function addDeliveryDayEventListeners() {
      console.log("-> Entering addDeliveryDayEventListeners");
      const deliveryButtons = document.querySelectorAll(".delivery-day");
@@ -295,57 +311,49 @@ document.addEventListener("DOMContentLoaded", () => {
     // Quantity Buttons Event Listeners (Attached after rendering products)
     function addQuantityControlListeners() {
         console.log("-> Entering addQuantityControlListeners");
-        // Find all plus/minus buttons in the product list
         const plusBtns = productListEl.querySelectorAll('.plusBtn');
         const minusBtns = productListEl.querySelectorAll('.minusBtn');
 
-        // Add listeners to plus buttons
         plusBtns.forEach(button => {
-             // Remove existing listeners to prevent duplicates if renderProducts is called again
-             // A more robust approach for production might involve event delegation
              const oldListener = button.dataset.plusListener;
             if(oldListener && window[oldListener]) {
                  button.removeEventListener('click', window[oldListener]);
-                 window[oldListener] = null; // Clean up the global reference
+                 window[oldListener] = null;
              }
 
             const newListener = (event) => {
-                const quantitySpan = event.target.closest('.product-quantity-controls').querySelector('.product-quantity'); // Find span within its controls container
-                 if (!quantitySpan) return; // Safety check
+                const quantitySpan = event.target.closest('.product-quantity-controls').querySelector('.product-quantity');
+                 if (!quantitySpan) return;
                 let currentQuantity = parseInt(quantitySpan.textContent, 10);
                 currentQuantity++;
                 quantitySpan.textContent = currentQuantity;
-                updatePrices(); // Recalculate totals after quantity change
+                updatePrices();
                  console.log("Plus button clicked.");
             };
-            // Assign a unique name and store it globally for removal
             const listenerName = 'plusListener_' + Math.random().toString(36).substr(2, 9);
             window[listenerName] = newListener;
             button.addEventListener("click", newListener);
             button.dataset.plusListener = listenerName;
         });
 
-         // Add listeners to minus buttons
          minusBtns.forEach(button => {
-            // Remove existing listeners
             const oldListener = button.dataset.minusListener;
              if(oldListener && window[oldListener]) {
                  button.removeEventListener('click', window[oldListener]);
-                 window[oldListener] = null; // Clean up the global reference
+                 window[oldListener] = null;
              }
 
             const newListener = (event) => {
-                 const quantitySpan = event.target.closest('.product-quantity-controls').querySelector('.product-quantity'); // Find span within its controls container
-                 if (!quantitySpan) return; // Safety check
+                 const quantitySpan = event.target.closest('.product-quantity-controls').querySelector('.product-quantity');
+                 if (!quantitySpan) return;
                  let currentQuantity = parseInt(quantitySpan.textContent, 10);
-                if (currentQuantity > 1) { // Prevent quantity from going below 1
+                if (currentQuantity > 1) {
                     currentQuantity--;
                     quantitySpan.textContent = currentQuantity;
-                    updatePrices(); // Recalculate totals after quantity change
+                    updatePrices();
                      console.log("Minus button clicked.");
                 }
             };
-             // Assign a unique name and store it globally for removal
             const listenerName = 'minusListener_' + Math.random().toString(36).substr(2, 9);
             window[listenerName] = newListener;
             button.addEventListener("click", newListener);
@@ -354,17 +362,15 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("<- Quantity control listeners added.");
     }
 
-    // Close Button Event Listeners (Attached after rendering products)
     function addCloseButtonListeners() {
         console.log("-> Entering addCloseButtonListeners");
         const removeButtons = productListEl.querySelectorAll('.remove-product-btn');
 
         removeButtons.forEach(button => {
-             // Remove existing listeners
              const oldListener = button.dataset.removeListener;
              if(oldListener && window[oldListener]) {
                  button.removeEventListener('click', window[oldListener]);
-                 window[oldListener] = null; // Clean up the global reference
+                 window[oldListener] = null;
              }
 
             const newListener = (event) => {
@@ -372,18 +378,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 const productItemEl = productListEl.querySelector(`.product-item[data-product-id="${productIdToRemove}"]`);
 
                 if(productItemEl) {
-                    productItemEl.remove(); // Remove the product element from the DOM
+                    productItemEl.remove();
                     console.log(`Product with ID ${productIdToRemove} removed.`);
-                    updatePrices(); // Recalculate totals after removal
-                    // Check if the list is now empty - updatePrices calls handleNoProductState if needed
+                    updatePrices();
                     if(productListEl.querySelectorAll('.product-item').length === 0) {
                         console.log("Last product removed. Calling handleNoProductState.");
-                        handleNoProductState(); // Correct place to call when the list becomes empty
+                        handleNoProductState();
                     }
                 }
                  console.log("Remove button clicked.");
             };
-             // Assign a unique name and store it globally for removal
             const listenerName = 'removeListener_' + Math.random().toString(36).substr(2, 9);
             window[listenerName] = newListener;
             button.addEventListener("click", newListener);
@@ -397,12 +401,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function initializePage() {
     console.log("-> Initializing page...");
-    disableOrderControls(); // Ensure buttons are disabled initially
+    disableOrderControls();
     updatePrices(); // Sets prices to 0 initially
     deliveryDaysCardEl.style.display = 'none';
     noProductMessageEl.style.display = 'block';
      loadingDeliveryDaysEl.style.display = 'block';
-     // Clear any static header that might be in the HTML - important for the new layout
      const staticHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
      if(staticHeader) {
           console.warn("Static product header found during initialization. Removing it.");
@@ -411,62 +414,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     try {
-      // Fetch Products first
-      productsData = await fetchProducts(); // Store fetched data globally if needed elsewhere
+      productsData = await fetchProducts();
       console.log("Products fetched:", productsData);
 
 
       if (productsData && productsData.length > 0) {
-         renderProducts(productsData); // Render products with quantity controls and close buttons
+         renderProducts(productsData);
           console.log("Products rendered.");
 
-        // If products were fetched successfully, fetch discount and delivery days
         try {
             const discountData = await fetchDiscount();
             discountPerItem = discountData.discountPerItem || 0;
              console.log("Discount fetched:", discountPerItem);
         } catch (discountError) {
              console.error("Could not fetch discount, using default 0:", discountError);
-             discountPerItem = 0; // Default to 0 if discount fetch fails
+             discountPerItem = 0;
         }
 
         try {
             const deliveryDays = await fetchDeliveryDays();
             renderDeliveryDays(deliveryDays);
-             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading after fetching days
+             loadingDeliveryDaysEl.style.display = 'none';
               console.log("Delivery days fetched:", deliveryDays);
         } catch (deliveryError) {
              console.error("Could not fetch delivery days:", deliveryError);
-             renderDeliveryDays([]); // Render empty state for delivery days
-             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading even on error
+             renderDeliveryDays([]);
+             loadingDeliveryDaysEl.style.display = 'none';
         }
 
-        // Only show delivery days and hide no product message if products were initially loaded
         deliveryDaysCardEl.style.display = 'block';
         noProductMessageEl.style.display = 'none';
          updatePrices(); // Update prices after fetching discount and initial render
 
 
       } else {
-        // If no products initially fetched or an error occurred during product fetch
         console.log("No products fetched or error occurred during fetch.");
-        handleNoProductState(); // Trigger no product state
-        productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>"; // Ensure message is shown in product area
+        handleNoProductState();
+        productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
       }
 
     } catch (error) {
       console.error("Critical error during page initialization (e.g., product fetch failed):", error);
-       // Handle critical errors (e.g., product fetch failed)
-       // Ensure the old static header is removed if it exists
        const existingHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
         if(existingHeader) existingHeader.remove();
 
       productListEl.innerHTML = "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات. لطفا مجددا تلاش کنید.</div>";
       loadingProductsEl.style.display = "none";
-       handleNoProductState(); // Trigger no product state on error
+       handleNoProductState();
     }
      console.log("<- Initializing page finished.");
   }
 
-  initializePage(); // Call the function to start the process on page load
+  initializePage();
 });
