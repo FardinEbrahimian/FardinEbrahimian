@@ -1,125 +1,123 @@
 document.addEventListener("DOMContentLoaded", () => {
   const productListEl = document.getElementById("product-list");
   const loadingProductsEl = document.getElementById("loading-products");
-  // orderQuantityEl دیگر در بخش جزئیات سفارش نیست، حذف شده است.
   const orderTotalPriceEl = document.getElementById("order-total-price");
   const orderDiscountEl = document.getElementById("order-discount");
   const orderFinalPriceEl = document.getElementById("order-final-price");
   const deliveryDaysCardEl = document.getElementById("delivery-days-card");
   const deliveryDaysContainerEl = document.getElementById("delivery-days-container");
-  const loadingDeliveryDaysEl = document.getElementById("loading-delivery-days");
+   const loadingDeliveryDaysEl = document.getElementById("loading-delivery-days");
   const noProductMessageEl = document.getElementById("no-product-message");
-  // plusBtn و minusBtn دیگر با ID در این سطح وجود ندارند، حذف شده‌اند.
   const payButton = document.getElementById("pay-button");
+  const productCardBody = document.querySelector('.col-md-9 .card-body'); // No longer needed for header
 
-  let products = [];
+  let productsData = []; // Store the initial product data from API
   let discountPerItem = 0;
-  // currentQuantity اکنون برای محصول اول مدیریت می‌شود
-  // let currentQuantity = 0; // Initialized in renderProducts based on product availability
-  let unitPrice = 0; // Will be set based on the first product (assuming one product for simplicity)
 
   // --- Simulated API Calls ---
-  // NOTE: Replace these URLs with your actual API endpoints
-
   async function fetchProducts() {
-    // Simulate fetching product data from an API
     return new Promise(resolve => {
       setTimeout(() => {
-        // Example data (can be an empty array to test the no-product scenario)
         const data = [
           {
             id: 1,
             name: "اسپرسو ساز فیلیپس اتوماتیک سایکو",
             description: "گارانتی اصالت و سلامت فیزیکی کالا",
             price: 17800000,
-            image: "./images/و-قیمت-اسپرسو-ساز-فیلیپس-اتوماتیک-سایکو-مدل-Saeco-SM878500-Xelsis-Deluxe-3.webp"
+            image: "./images/و-قیمت-اسپرسو-ساز-فیلیپس-اتوماتیک-سایکو-مدل-Saeco-SM878500-Xelsico-Deluxe-3.webp" // Corrected image name based on original HTML
           }
+           ,
+            {
+              id: 2,
+              name: "محصول نمونه دیگر",
+              description: "توضیحات محصول دوم",
+              price: 5000000,
+              image: "https://via.placeholder.com/100" // Placeholder image
+            }
+
         ];
-        // Uncomment the line below to simulate no products
-        // const data = [];
+        // const data = []; // Uncomment to simulate no products
         resolve(data);
-      }, 500); // Simulate network delay
+      }, 500);
     });
   }
 
   async function fetchDiscount() {
-    // Simulate fetching discount data from an API
     return new Promise(resolve => {
       setTimeout(() => {
-        const data = { discountPerItem: 280000 };
+        const data = { discountPerItem: 280000 }; // Discount is per item (product type)
         resolve(data);
-      }, 300); // Simulate network delay
+      }, 300);
     });
   }
 
   async function fetchDeliveryDays() {
-    // Simulate fetching delivery days data from an API
     return new Promise(resolve => {
       setTimeout(() => {
-        // Example data (can be an empty array to test the no-delivery-days scenario when products exist)
         const data = [
           { dayOfWeek: "شنبه", date: "۷ بهمن" },
           { dayOfWeek: "یکشنبه", date: "۸ بهمن" },
           { dayOfWeek: "دوشنبه", date: "۹ بهمن" }
         ];
-        // Uncomment the line below to simulate no delivery days
-        // const data = [];
+        // const data = []; // Uncomment to simulate no delivery days
         resolve(data);
-      }, 400); // Simulate network delay
+      }, 400);
     });
   }
 
   // --- Rendering Functions ---
 
   function renderProducts(productsToRender) {
+    // Clear the header and product list
+    const existingHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
+    if(existingHeader) existingHeader.remove(); // Remove old header if exists
+
     productListEl.innerHTML = ""; // Clear current content
-    loadingProductsEl.style.display = "none"; // Hide loading message
+
+    loadingProductsEl.style.display = "none";
 
     if (productsToRender && productsToRender.length > 0) {
-        // Assuming only one product for simplicity as per original structure
-      const product = productsToRender[0];
-      const productHtml = `
-        <div class="table-row">
-          <div class="table-cell mt-3">
-            <div class="d-flex justify-content-between align-items-center product-item">
-              <div class="d-flex align-items-center flex-wrap">
-                <img src="${product.image}" alt="تصویر محصول" width="150" height="150">
-                <div class="me-4">
-                  <div class="title">${product.name}</div>
-                  <div class="description">${product.description}</div>
-                </div>
+      productsToRender.forEach(product => {
+        const productHtml = `
+          <div class="product-item card mb-3" data-product-id="${product.id}">
+            <div class="card-body d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center">
+                 <img src="${product.image}" alt="تصویر محصول" width="100" height="100" class="me-3">
+                 <div>
+                    <div class="title fw-bold">${product.name}</div>
+                    <div class="description text-muted small">${product.description}</div>
+                 </div>
               </div>
-              <div class="d-flex flex-column align-items-end">
-                <span>${new Intl.NumberFormat("fa-IR").format(product.price)} تومان</span>
+              <div class="d-flex flex-column align-items-end ms-3">
+                <span class="product-price fw-bold">${new Intl.NumberFormat("fa-IR").format(product.price)} تومان</span>
                  <div class="d-flex align-items-center mt-2 product-quantity-controls">
                   <button class="bg-transparent border border-danger-subtle rounded-circle px-2 minusBtn">-</button>
-                  <div class="d-inline mx-2"><span class="product-quantity">1</span> مورد</div>
+                  <div class="d-inline mx-1"><span class="product-quantity">1</span></div> مورد
                   <button class="bg-transparent border border-danger-subtle rounded-circle px-2 plusBtn">+</button>
                 </div>
               </div>
+              <button type="button" class="btn-close ms-3 remove-product-btn" aria-label="حذف محصول" data-product-id="${product.id}"></button>
             </div>
           </div>
-        </div>
-      `;
-      productListEl.innerHTML = productHtml; // Set product HTML
+        `;
+        productListEl.innerHTML += productHtml; // Append each product
+      });
 
-      unitPrice = product.price;
-      // currentQuantity will be read from the span element
-       enableOrderControls();
-       addQuantityControlListeners(); // Add listeners to the new buttons
+       // Add event listeners after rendering all products
+       addQuantityControlListeners();
+       addCloseButtonListeners();
+       enableOrderControls(); // Enable buttons now that products are rendered
     } else {
       productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
-      unitPrice = 0;
-      // currentQuantity will be 0 as the span won't exist or will show 0
-      disableOrderControls();
+      disableOrderControls(); // No products, disable controls
     }
-     updatePrices(); // Update details based on loaded products and initial quantity
+     updatePrices(); // Update totals based on rendered products
   }
 
-  function renderDeliveryDays(daysToRender) {
-     deliveryDaysContainerEl.innerHTML = ""; // Clear current content
-     loadingDeliveryDaysEl.style.display = "none"; // Hide loading message
 
+  function renderDeliveryDays(daysToRender) {
+     deliveryDaysContainerEl.innerHTML = "";
+     loadingDeliveryDaysEl.style.display = "none";
 
     if (daysToRender && daysToRender.length > 0) {
       const daysHtml = daysToRender.map(day => `
@@ -128,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </button>
       `).join('');
       deliveryDaysContainerEl.innerHTML = daysHtml;
-       addDeliveryDayEventListeners(); // Add event listeners to new buttons
+       addDeliveryDayEventListeners();
     } else {
       deliveryDaysContainerEl.innerHTML = "<div class='text-center py-3'>روز تحویلی در دسترس نیست.</div>";
     }
@@ -137,60 +135,92 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Update Order Details and Payment ---
 
   function updatePrices() {
-      // Get current quantity from the product item span
-      const quantitySpan = productListEl.querySelector('.product-quantity');
-      const currentQuantity = quantitySpan ? parseInt(quantitySpan.textContent, 10) : 0;
+      const productItems = productListEl.querySelectorAll('.product-item'); // Get all product items currently in DOM
+      let totalItemsCount = 0;
+      let calculatedTotalPrice = 0;
+      let calculatedTotalDiscount = 0;
 
-    const totalPrice = unitPrice * currentQuantity;
-    const totalDiscount = discountPerItem * currentQuantity;
-    const finalPrice = totalPrice - totalDiscount; // Assuming no delivery cost added here for simplicity based on original code
+      productItems.forEach(item => {
+          const quantitySpan = item.querySelector('.product-quantity');
+          const priceSpan = item.querySelector('.product-price');
 
-    // orderQuantityEl is removed from order summary, only update other fields
-    orderTotalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(totalPrice) + " تومان";
-    orderDiscountEl.textContent = new Intl.NumberFormat("fa-IR").format(totalDiscount) + " تومان";
+          if(quantitySpan && priceSpan) {
+              const quantity = parseInt(quantitySpan.textContent, 10);
+               // Remove " تومان" and commas before parsing price
+              const priceText = priceSpan.textContent.replace(' تومان', '').replace(/,/g, '');
+              const price = parseInt(priceText, 10);
+
+              if (!isNaN(quantity) && !isNaN(price)) {
+                  totalItemsCount += quantity;
+                  calculatedTotalPrice += price * quantity;
+                  calculatedTotalDiscount += discountPerItem * quantity;
+              }
+          }
+      });
+
+
+    // orderQuantityEl is removed, not updating a total count in order summary list
+    orderTotalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(calculatedTotalPrice) + " تومان";
+    orderDiscountEl.textContent = new Intl.NumberFormat("fa-IR").format(calculatedTotalDiscount) + " تومان";
+    const finalPrice = calculatedTotalPrice - calculatedTotalDiscount;
     orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(finalPrice);
 
-    // Disable pay button if quantity is 0
-    if (currentQuantity === 0) {
+    // Disable pay button if no product items remain in the list
+    if (productItems.length === 0 || calculatedTotalPrice === 0) {
       payButton.classList.add('disabled');
-      payButton.style.pointerEvents = 'none'; // Prevent click events
+      payButton.style.pointerEvents = 'none';
+         // Trigger the "no product" state if all items removed
+         handleNoProductState();
     } else {
        payButton.classList.remove('disabled');
        payButton.style.pointerEvents = 'auto';
+        // Ensure "no product" state is hidden if items exist
+        noProductMessageEl.style.display = 'none';
+        deliveryDaysCardEl.style.display = 'block'; // Assuming delivery days were fetched already or will be handled elsewhere
     }
   }
 
    // --- Control Button States ---
+   // These functions are now less relevant as buttons are per item, but keep for consistency
   function enableOrderControls() {
-      // Enable the buttons within the rendered product item
-      const plusBtn = productListEl.querySelector('.plusBtn');
-      const minusBtn = productListEl.querySelector('.minusBtn');
-      if(plusBtn) plusBtn.disabled = false;
-      if(minusBtn) minusBtn.disabled = false;
+     // Find all plus/minus buttons and enable them
+     const plusBtns = productListEl.querySelectorAll('.plusBtn');
+     const minusBtns = productListEl.querySelectorAll('.minusBtn');
+     plusBtns.forEach(btn => btn.disabled = false);
+     minusBtns.forEach(btn => btn.disabled = false);
   }
 
   function disableOrderControls() {
-       // Disable the buttons within the rendered product item
-       const plusBtn = productListEl.querySelector('.plusBtn');
-       const minusBtn = productListEl.querySelector('.minusBtn');
-       if(plusBtn) plusBtn.disabled = true;
-       if(minusBtn) minusBtn.disabled = true;
+       // Find all plus/minus buttons and disable them
+     const plusBtns = productListEl.querySelectorAll('.plusBtn');
+     const minusBtns = productListEl.querySelectorAll('.minusBtn');
+     plusBtns.forEach(btn => btn.disabled = true);
+     minusBtns.forEach(btn => btn.disabled = true);
+  }
+
+  // --- Handle No Product State ---
+  function handleNoProductState() {
+      discountPerItem = 0; // Reset discount if no products
+      deliveryDaysCardEl.style.display = 'none';
+      noProductMessageEl.style.display = 'block';
+      loadingDeliveryDaysEl.style.display = 'none';
+      deliveryDaysContainerEl.innerHTML = "";
+      updatePrices(); // Ensure prices are 0
+      disableOrderControls(); // Disable any potential controls (though they shouldn't exist)
   }
 
 
   // --- Event Listeners ---
 
-   // Payment Option Styling (remains the same)
-  const optionItems = document.querySelectorAll(".option-item");
+   const optionItems = document.querySelectorAll(".option-item");
   optionItems.forEach((item) => {
     item.addEventListener("click", function () {
       optionItems.forEach((opt) => (opt.style.backgroundColor = ""));
-      this.style.backgroundColor = "#3B82F6"; // Highlight selected
+      this.style.backgroundColor = "#3B82F6";
     });
   });
 
 
-  // Delivery Day Styling (Needs to be called after rendering days)
   function addDeliveryDayEventListeners() {
      const deliveryButtons = document.querySelectorAll(".delivery-day");
       deliveryButtons.forEach((button) => {
@@ -208,26 +238,71 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Quantity Buttons Event Listeners (Attached after rendering products)
     function addQuantityControlListeners() {
-        const plusBtn = productListEl.querySelector('.plusBtn');
-        const minusBtn = productListEl.querySelector('.minusBtn');
-        const quantitySpan = productListEl.querySelector('.product-quantity');
+        // Find all plus/minus buttons in the product list
+        const plusBtns = productListEl.querySelectorAll('.plusBtn');
+        const minusBtns = productListEl.querySelectorAll('.minusBtn');
 
-        if (!plusBtn || !minusBtn || !quantitySpan) return; // Exit if elements not found
+        plusBtns.forEach(button => {
+             // Remove existing listeners to prevent duplicates if renderProducts is called again
+            const oldListener = button.dataset.listener;
+            if(oldListener) button.removeEventListener('click', window[oldListener]);
 
-        plusBtn.addEventListener("click", () => {
-            let currentQuantity = parseInt(quantitySpan.textContent, 10);
-            currentQuantity++;
-            quantitySpan.textContent = currentQuantity;
-            updatePrices();
-        });
-
-        minusBtn.addEventListener("click", () => {
-             let currentQuantity = parseInt(quantitySpan.textContent, 10);
-            if (currentQuantity > 1) { // Prevent quantity from going below 1
-                currentQuantity--;
+            const newListener = (event) => {
+                const quantitySpan = event.target.parentElement.querySelector('.product-quantity');
+                 if (!quantitySpan) return; // Safety check
+                let currentQuantity = parseInt(quantitySpan.textContent, 10);
+                currentQuantity++;
                 quantitySpan.textContent = currentQuantity;
                 updatePrices();
-            }
+            };
+            button.addEventListener("click", newListener);
+            button.dataset.listener = 'plus' + button.dataset.productId; // Store a unique listener name (requires product ID)
+        });
+
+         minusBtns.forEach(button => {
+            // Remove existing listeners
+             const oldListener = button.dataset.listener;
+            if(oldListener) button.removeEventListener('click', window[oldListener]);
+
+            const newListener = (event) => {
+                 const quantitySpan = event.target.parentElement.querySelector('.product-quantity');
+                 if (!quantitySpan) return; // Safety check
+                 let currentQuantity = parseInt(quantitySpan.textContent, 10);
+                if (currentQuantity > 1) {
+                    currentQuantity--;
+                    quantitySpan.textContent = currentQuantity;
+                    updatePrices();
+                }
+            };
+            button.addEventListener("click", newListener);
+             button.dataset.listener = 'minus' + button.dataset.productId; // Store unique listener name (requires product ID)
+        });
+    }
+
+    // Close Button Event Listeners (Attached after rendering products)
+    function addCloseButtonListeners() {
+        const removeButtons = productListEl.querySelectorAll('.remove-product-btn');
+
+        removeButtons.forEach(button => {
+             // Remove existing listeners
+             const oldListener = button.dataset.listener;
+            if(oldListener) button.removeEventListener('click', window[oldListener]);
+
+            const newListener = (event) => {
+                const productIdToRemove = event.target.dataset.productId;
+                const productItemEl = productListEl.querySelector(`.product-item[data-product-id="${productIdToRemove}"]`);
+
+                if(productItemEl) {
+                    productItemEl.remove(); // Remove the product element from the DOM
+                    updatePrices(); // Recalculate totals
+                    // Check if the list is now empty
+                    if(productListEl.querySelectorAll('.product-item').length === 0) {
+                        handleNoProductState(); // Trigger no product state
+                    }
+                }
+            };
+            button.addEventListener("click", newListener);
+             button.dataset.listener = 'remove' + button.dataset.productId; // Store unique listener name (requires product ID)
         });
     }
 
@@ -235,71 +310,62 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Initial Data Fetch and Rendering ---
 
   async function initializePage() {
-    // Initially disable buttons and set prices to 0
-    disableOrderControls(); // This will target buttons if they exist after rendering
+    disableOrderControls();
     updatePrices(); // Sets prices to 0 initially
-    deliveryDaysCardEl.style.display = 'none'; // Hide delivery section initially
-    noProductMessageEl.style.display = 'block'; // Show no product message initially
-     loadingDeliveryDaysEl.style.display = 'block'; // Show loading for delivery days initially
+    deliveryDaysCardEl.style.display = 'none';
+    noProductMessageEl.style.display = 'block';
+     loadingDeliveryDaysEl.style.display = 'block';
+     // Clear any static header that might be in the HTML
+     const staticHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
+     if(staticHeader) staticHeader.remove();
 
 
     try {
-      // Fetch Products
-      products = await fetchProducts();
-      renderProducts(products); // This will render products, set unitPrice, initial quantity, and add listeners
+      productsData = await fetchProducts(); // Store fetched data globally if needed elsewhere
 
-      if (products && products.length > 0) {
-        // If products exist, fetch discount and delivery days
+      if (productsData && productsData.length > 0) {
+        renderProducts(productsData); // Render products with quantity controls and close buttons
+
         try {
             const discountData = await fetchDiscount();
             discountPerItem = discountData.discountPerItem || 0;
         } catch (discountError) {
              console.error("Could not fetch discount, using default 0:", discountError);
-             discountPerItem = 0; // Default to 0 if discount fetch fails
+             discountPerItem = 0;
         }
 
         try {
             const deliveryDays = await fetchDeliveryDays();
             renderDeliveryDays(deliveryDays);
-             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading after fetching days
+             loadingDeliveryDaysEl.style.display = 'none';
         } catch (deliveryError) {
              console.error("Could not fetch delivery days:", deliveryError);
-             renderDeliveryDays([]); // Render empty state for delivery days
-             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading even on error
+             renderDeliveryDays([]);
+             loadingDeliveryDaysEl.style.display = 'none';
         }
 
-
-        // Show delivery days section if products are available
+        // Only show delivery days and hide no product message if products were initially loaded
         deliveryDaysCardEl.style.display = 'block';
         noProductMessageEl.style.display = 'none';
-         updatePrices(); // Update prices again after fetching discount
+         updatePrices(); // Update prices after fetching discount and initial render
 
 
       } else {
-        // If no products
-        discountPerItem = 0;
-        deliveryDaysCardEl.style.display = 'none'; // Hide delivery section
-        noProductMessageEl.style.display = 'block'; // Show no product message
-        loadingDeliveryDaysEl.style.display = 'none'; // Hide loading for delivery days
-         deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days content
-         updatePrices(); // Ensure prices are 0
+        // If no products initially fetched
+        handleNoProductState(); // Trigger no product state
+        productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>"; // Show message in product area
       }
 
     } catch (error) {
       console.error("Critical error during page initialization:", error);
-      // Handle critical errors (e.g., product fetch failed)
+       // Handle critical errors (e.g., product fetch failed)
+      const existingHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
+        if(existingHeader) existingHeader.remove();
       productListEl.innerHTML = "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات. لطفا مجددا تلاش کنید.</div>";
       loadingProductsEl.style.display = "none";
-      loadingDeliveryDaysEl.style.display = "none";
-      deliveryDaysCardEl.style.display = 'none'; // Hide delivery section on error
-      noProductMessageEl.style.display = 'block'; // Show no product message on error
-       disableOrderControls();
-       discountPerItem = 0;
-       unitPrice = 0;
-       // currentQuantity implicitly 0
-       updatePrices(); // Ensure prices are 0
+       handleNoProductState(); // Trigger no product state on error
     }
   }
 
-  initializePage(); // Call the function to start the process on page load
+  initializePage();
 });
