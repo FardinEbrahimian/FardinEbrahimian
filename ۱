@@ -1,8 +1,8 @@
-/*کد نهایی با امکان سوییچ بین API شبیه سازی شده و داده محلی/غیرفعال سازی*/
+/*کد نهایی با امکان سوییچ بین API شبیه سازی شده و داده محلی/غیرفعال سازی و حالت سبد خرید خالی*/
 document.addEventListener("DOMContentLoaded", () => {
 
   // --- Configuration Flag: Set to true to use simulated API, false to use local data and disable elements ---
-  const useSimulatedApi = true; // <<--- Change this to false to use local data and disable elements
+  const useSimulatedApi = true; // <<--- Change this to false to use local data and show empty cart state
 
 
   const productListEl = document.getElementById("product-list");
@@ -28,29 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // --- Local Data (used when useSimulatedApi is false) ---
-  const localProductsData = [
-      {
-          id: 1,
-          name: "اسپرسو ساز فیلیپس اتوماتیک سایکو",
-          description: "گارانتی اصالت و سلامت فیزیکی کالا",
-          price: 17800000,
-          image: "./images/و-قیمت-اسپرسو-ساز-فیلیپس-اتوماتیک-سایکو-مدل-Saeco-SM878500-Xelsis-Deluxe-3.webp",
-      },
-      {
-          id: 2,
-          name: "محصول نمونه دیگر",
-          description: "توضیحات محصول دوم برای تست لیست",
-          price: 5000000,
-          image: "https://via.placeholder.com/100",
-      },
-      {
-          id: 3,
-          name: "محصول سوم تستی",
-          description: "توضیحات کوتاه محصول سوم",
-          price: 2500000,
-          image: "https://via.placeholder.com/100/FF0000",
-      },
-  ];
+  // In local mode with empty cart state, localProductsData will be an empty array
+  const localProductsData = []; // Start with an empty array for empty cart state
+
+
   // Define local discount codes if needed for local validation (though in non-API mode, discount input is disabled)
   const localDiscountCodes = [
       { code: 'SALE10', amount: 500000 },
@@ -99,7 +80,31 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("-> Fetching products...");
     return new Promise((resolve) => {
       setTimeout(() => {
-        const data = localProductsData; // In simulated mode, just return local data
+        // In simulated API mode, define the actual products here or fetch from a real endpoint
+         const apiProductsData = [
+          {
+            id: 1,
+            name: "اسپرسو ساز فیلیپس اتوماتیک سایکو",
+            description: "گارانتی اصالت و سلامت فیزیکی کالا",
+            price: 17800000,
+            image: "./images/و-قیمت-اسپرسو-ساز-فیلیپس-اتوماتیک-سایکو-مدل-Saeco-SM878500-Xelsis-Deluxe-3.webp",
+          },
+          {
+            id: 2,
+            name: "محصول نمونه دیگر",
+            description: "توضیحات محصول دوم برای تست لیست",
+            price: 5000000,
+            image: "https://via.placeholder.com/100",
+          },
+          {
+            id: 3,
+            name: "محصول سوم تستی",
+            description: "توضیحات کوتاه محصول سوم",
+            price: 2500000,
+            image: "https://via.placeholder.com/100/FF0000",
+          },
+        ];
+        const data = apiProductsData; // Return the actual product data
         // const data = []; // Uncomment to simulate no products fetched via API
         console.log("<- Fetching products resolved with data:", data);
         resolve(data);
@@ -191,8 +196,8 @@ document.addEventListener("DOMContentLoaded", () => {
       enableOrderControls();
 
     } else {
-      productListEl.innerHTML =
-        "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
+       // If no products to render (empty list) -> This case is handled by handleNoProductState now
+        // The content of productListEl for the empty state is set in handleNoProductState
       disableOrderControls();
     }
     updatePrices();
@@ -206,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
      loadingDeliveryDaysEl.style.display = "none";
 
 
-    if (daysToRender && daysToRender.length > 0) {
+    if (useSimulatedApi && daysToRender && daysToRender.length > 0) { // Only render if API mode AND data exists
       const daysHtml = daysToRender
         .map(
           (day) => `
@@ -219,8 +224,9 @@ document.addEventListener("DOMContentLoaded", () => {
       deliveryDaysContainerEl.innerHTML = daysHtml;
        addDeliveryDayEventListeners();
     } else {
+       // In local mode OR if no data in API mode, show a message
       deliveryDaysContainerEl.innerHTML =
-        "<div class='text-center py-3'>روز تحویلی در دسترس نیست.</div>";
+        "<div class='text-center py-3'>اطلاعات تحویل در دسترس نیست.</div>";
     }
      console.log("<- Exiting renderDeliveryDays");
   }
@@ -309,24 +315,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Control pay button state based on whether there are items and total price > 0
-    // This logic applies in both API and local modes, but in local mode the button starts disabled
+    // This logic applies in both API and local modes, but disabling class is added in local mode
     if (productItems.length === 0 || calculatedTotalPrice <= 0) {
        console.log("updatePrices: Condition met for 'no product state' logic.");
-       // Button is disabled either by this logic or initially in local mode
        if (payButton) {
            payButton.classList.add('disabled');
            payButton.style.pointerEvents = 'none';
             if (!useSimulatedApi) payButton.setAttribute('disabled', 'true'); // Ensure attribute in local mode
+       } else { console.error("Pay button not found!"); }
+
+       // If using local mode AND condition is met, ensure payment options are disabled
+       if (!useSimulatedApi && paymentOptionsContainer) {
+            paymentOptionsContainer.classList.add('disabled-element');
        }
+
     } else {
         console.log("updatePrices: Condition not met for 'no product state' logic.");
-         // Button can be enabled by this logic IF we are in API mode AND it wasn't disabled by the if block above
+        // If using API mode AND condition is not met, enable the button
         if (useSimulatedApi && payButton) {
              payButton.classList.remove('disabled');
              payButton.style.pointerEvents = 'auto';
              payButton.removeAttribute('disabled');
-        }
-         // In local mode, the button remains disabled as set in initializePage
+        } else if (!useSimulatedApi && payButton) {
+             // In local mode, button stays disabled as set in initializePage
+        } else { console.error("Pay button not found!"); }
+
+
+         // If using API mode AND condition is not met, ensure payment options are NOT disabled
+         if (useSimulatedApi && paymentOptionsContainer) {
+              paymentOptionsContainer.classList.remove('disabled-element');
+         } else if (!useSimulatedApi && paymentOptionsContainer) {
+              // In local mode, payment options stay disabled as set in initializePage
+         } else { console.error("Payment options container not found!"); }
+
     }
     console.log("<- Exiting updatePrices");
   }
@@ -357,43 +378,49 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Handle No Product State ---
   function handleNoProductState() {
     console.log("-> Entering handleNoProductState");
-    appliedDiscount = 0;
-    deliveryDaysCardEl.style.display = "none";
-    noProductMessageEl.style.display = "block";
-    loadingDeliveryDaysEl.style.display = "none";
-    deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days content
-     if (!useSimulatedApi) { // In local mode, show a message
-          deliveryDaysContainerEl.innerHTML = "<div class='text-center py-3'>اطلاعات تحویل در دسترس نیست.</div>";
-     }
+    appliedDiscount = 0; // Reset applied discount if no products
 
-    updatePrices();
-    disableOrderControls();
+    // --- Update Product List display for empty state ---
+    // Show empty cart icon and message in the product list area
+    productListEl.innerHTML = `
+      <div class="empty-cart-state text-center py-5 text-muted">
+          <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="#ced4da" viewBox="0 0 256 256">
+              <path d="M96,216a12,12,0,1,1-12,12A12,12,0,0,1,96,216Zm88,12a12,12,0,1,0,12-12A12,12,0,0,0,184,228ZM230.67,80.44l-17.33,88A16,16,0,0,1,199.33,192H72a16,16,0,0,1-14-8.83L32,32H8A8,8,0,0,1,8,16H32a8,8,0,0,1,7.17,4.83L62,96H201.33l14-70A8,8,0,0,1,224,21.33h8a8,8,0,0,1,0,16H224ZM72,176H199.33a0.11,0.11,0,0,0,.09-0.07l14-88a0.13,0.13,0,0,0,0.06-0.11V96H62Z"></path>
+          </svg>
+          <p class="text-muted mt-3">سبد خرید شما خالی است.</p>
+      </div>
+    `;
+
+    deliveryDaysCardEl.style.display = "none"; // Hide delivery days card
+    noProductMessageEl.style.display = "block"; // Show the dedicated "هنوز محصولی انتخاب نشده است" div
+    loadingDeliveryDaysEl.style.display = "none"; // Hide delivery loading
+     // Show a message in the delivery days section
+    deliveryDaysContainerEl.innerHTML = "<div class='text-center py-3'>اطلاعات تحویل در دسترس نیست.</div>";
+
+
+    updatePrices(); // Ensure prices are 0 (including appliedDiscount)
+    disableOrderControls(); // Disable quantity/remove buttons
     console.log("<- Exiting handleNoProductState");
   }
 
   // --- Event Listeners ---
 
   // Payment Option Styling
-  const optionItems = document.querySelectorAll(".option-item");
-  optionItems.forEach((item) => {
-     // Listener only active if not using simulated API (i.e., if not disabled)
-     if (useSimulatedApi && !paymentOptionsContainer.classList.contains('disabled-element')) {
-          item.addEventListener("click", function () {
-            console.log("Payment option clicked.");
-            optionItems.forEach((opt) => (opt.style.backgroundColor = ""));
-            this.style.backgroundColor = "#3B82F6";
-          });
-     } else {
-         console.log("Payment option listener not attached (disabled mode).");
-         // Optionally add a passive listener or rely on CSS for disabled state
-     }
+  const optionItemsElements = document.querySelectorAll(".option-item");
+  optionItemsElements.forEach((item) => {
+     // Listener only active if not disabled by the disabling logic in initializePage/updatePrices
+     item.addEventListener("click", function () {
+         console.log("Payment option clicked (listener attached).");
+         // Styling logic applies unless disabled-element class prevents event or styling
+          optionItemsElements.forEach((opt) => (opt.style.backgroundColor = ""));
+          this.style.backgroundColor = "#3B82F6";
+      });
   });
 
 
   // Delivery Day Styling
   function addDeliveryDayEventListeners() {
     console.log("-> Entering addDeliveryDayEventListeners");
-    // Listeners only attached if delivery days are rendered (which happens in API mode if data fetched)
     const deliveryButtons = document.querySelectorAll(".delivery-day");
     deliveryButtons.forEach((button) => {
       button.addEventListener("click", () => {
@@ -508,8 +535,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Discount Code Input Listener (Only active when useSimulatedApi is true) ---
-  if (useSimulatedApi && discountCodeInputEl) {
+  // Listener attached regardless, but logic inside depends on useSimulatedApi
+  if (discountCodeInputEl) {
       discountCodeInputEl.addEventListener('change', async (event) => {
+          if (!useSimulatedApi) {
+               console.log("-> Discount code input changed (local mode - ignored).");
+               // In local mode, input is disabled, so this won't be easily triggered, but handle defensively
+               event.target.value = ''; // Clear input in local mode if somehow changed
+               appliedDiscount = 0;
+               updatePrices();
+               return; // Exit if in local mode
+          }
+
           console.log("-> Discount code input changed (API mode).");
           const enteredCode = event.target.value.trim();
           appliedDiscount = 0; // Reset applied discount initially
@@ -526,33 +563,26 @@ document.addEventListener("DOMContentLoaded", () => {
                       appliedDiscount = validCode.amount;
                       console.log(`Valid discount code "${enteredCode}" applied. Discount amount: ${appliedDiscount}`);
                       // Show success message
-                      // Example: document.getElementById('discount-message').textContent = 'کد تخفیف اعمال شد.';
                   } else {
                       appliedDiscount = 0;
                       console.log(`Invalid discount code entered: "${enteredCode}". No discount applied.`);
                        // Show error message
-                       // Example: document.getElementById('discount-message').textContent = 'کد تخفیف نامعتبر است.';
                   }
               } catch (error) {
                    console.error("Error fetching or applying discount code:", error);
                    appliedDiscount = 0;
                    // Show fetch error message
-                   // Example: document.getElementById('discount-message').textContent = 'خطا در بررسی کد تخفیف.';
               }
           } else {
                console.log("Discount code input cleared. Applied discount reset to 0.");
                appliedDiscount = 0;
                // Clear discount messages
-               // Example: document.getElementById('discount-message').textContent = '';
           }
 
           updatePrices();
           console.log("<- Discount code input change listener finished.");
       });
-       console.log("Discount code input listener added (API mode).");
-  } else if (discountCodeInputEl) {
-      console.log("Discount code input listener NOT added (local mode).");
-      // In local mode, the input is disabled and its value is not used for discount
+       console.log("Discount code input listener added.");
   } else {
       console.error("Discount code input element with id 'discount-code-input' not found!");
   }
@@ -563,10 +593,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function initializePage() {
     console.log("-> Initializing page...");
 
-    disableOrderControls();
+    disableOrderControls(); // Disable quantity/remove buttons initially
     appliedDiscount = 0; // Ensure discount is 0 initially
-    updatePrices(); // Display initial prices (all zero)
 
+    // Clear any static header
     const staticHeader = productCardBody.querySelector(
       ".table-container > .d-flex.justify-content-between.border-bottom"
     );
@@ -577,14 +607,12 @@ document.addEventListener("DOMContentLoaded", () => {
       staticHeader.remove();
     }
 
-
     if (useSimulatedApi) {
         console.log("Using simulated API.");
 
-         // --- Disable elements that are only active in API mode initially (Pay button will be enabled by updatePrices if total > 0) ---
+         // --- Elements active in API mode ---
         if (paymentOptionsContainer) {
-            // In API mode, payment options might be clickable. Don't add disabled-element class initially.
-             // Add listener for styling here if needed, or rely on the general listener block below initializePage
+             paymentOptionsContainer.classList.remove('disabled-element'); // Ensure not disabled
         } else { console.error("Payment options container not found!"); }
 
         if (payButton) {
@@ -596,20 +624,22 @@ document.addEventListener("DOMContentLoaded", () => {
         } else { console.error("Pay button not found!"); }
 
          if (discountCodeInputEl) {
-             // Discount input is active in API mode, don't disable initially here
+             discountCodeInputEl.classList.remove('disabled-element'); // Ensure not disabled
+             discountCodeInputEl.removeAttribute('disabled');
+             discountCodeInputEl.value = ''; // Clear any previous value
              console.log("Discount code input is active (API mode).");
          } else { console.error("Discount code input element with id 'discount-code-input' not found!"); }
 
          if (shippingTypeCardEl) {
-              // Shipping card is active in API mode, don't disable initially here
+             shippingTypeCardEl.classList.remove('disabled-element'); // Ensure not disabled
              console.log("Shipping type card is active (API mode).");
          } else { console.warn("Shipping type card (id='shipping-type-card') not found."); }
 
 
         // --- Fetch data from simulated APIs ---
-        deliveryDaysCardEl.style.display = 'block';
-        noProductMessageEl.style.display = 'block';
-        loadingDeliveryDaysEl.style.display = 'block';
+        deliveryDaysCardEl.style.display = 'block'; // Show delivery days card
+        noProductMessageEl.style.display = 'block'; // Show loading message initially
+        loadingDeliveryDaysEl.style.display = 'block'; // Show delivery loading
 
         try {
             productsData = await fetchProducts();
@@ -623,7 +653,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 try {
                     const availableCodes = await fetchDiscountCodes();
                     console.log("Initial discount codes fetched:", availableCodes);
-                    // You might want to store availableCodes if validating elsewhere, but the input listener fetches them on change.
                 } catch (discountCodeError) {
                     console.error("Could not fetch initial discount codes:", discountCodeError);
                 }
@@ -639,24 +668,26 @@ document.addEventListener("DOMContentLoaded", () => {
                     loadingDeliveryDaysEl.style.display = 'none';
                 }
 
-                noProductMessageEl.style.display = 'none';
+                noProductMessageEl.style.display = 'none'; // Hide no product message if products loaded
+                // Initial price update and pay button state happen inside renderProducts -> updatePrices
 
             } else {
                 console.log("No products fetched or error occurred during fetch.");
-                handleNoProductState();
-                productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
+                handleNoProductState(); // Trigger no product state
+                // handleNoProductState now sets productListEl content for empty state
             }
         } catch (error) {
             console.error("Critical error during simulated API fetch (e.g., product fetch failed):", error);
+             // Set empty state and show error message in product list area
             productListEl.innerHTML = "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات از API شبیه‌سازی شده. لطفا مجددا تلاش کنید.</div>";
             loadingProductsEl.style.display = "none";
-            handleNoProductState();
+            handleNoProductState(); // Trigger no product state on error (resets discount, hides delivery, etc.)
         }
 
-    } else { // Use local data and disable elements
-        console.log("Using local data and disabling elements.");
+    } else { // Use local data (empty cart state) and disable elements
+        console.log("Using local data (empty cart state) and disabling elements.");
 
-        // --- Disable specific elements as requested ---
+        // --- Disable specific elements as requested for empty/local state ---
         if (paymentOptionsContainer) {
             paymentOptionsContainer.classList.add('disabled-element');
             console.log("Payment options container disabled.");
@@ -673,6 +704,7 @@ document.addEventListener("DOMContentLoaded", () => {
          if (discountCodeInputEl) {
              discountCodeInputEl.classList.add('disabled-element');
              discountCodeInputEl.setAttribute('disabled', 'true');
+             discountCodeInputEl.value = ''; // Ensure input is empty
              console.log("Discount code input disabled.");
          } else { console.error("Discount code input element with id 'discount-code-input' not found!"); }
 
@@ -682,60 +714,48 @@ document.addEventListener("DOMContentLoaded", () => {
          } else { console.warn("Shipping type card (id='shipping-type-card') not found. Could not disable."); }
 
 
-        // --- Render products from local data ---
-        console.log("Rendering products from local data...");
-        if (localProductsData && localProductsData.length > 0) {
-            productsData = localProductsData; // Set productsData to local data
-            renderProducts(productsData);
-            console.log("Products rendered from local data.");
-            noProductMessageEl.style.display = "none";
+        // --- Render products from local data (empty in this case) ---
+        console.log("Rendering products from local data (empty).");
+        productsData = localProductsData; // Set productsData to the empty local data array
+        renderProducts(productsData); // renderProducts will call handleNoProductState because productsData is empty
 
-        } else {
-            console.log("No local product data available.");
-            handleNoProductState();
-            productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
-        }
-
-        // --- Handle Delivery Days display in local mode ---
-        deliveryDaysCardEl.style.display = "none";
-        loadingDeliveryDaysEl.style.display = "none";
-        deliveryDaysContainerEl.innerHTML = "<div class='text-center py-3'>اطلاعات تحویل در دسترس نیست.</div>";
-
-         // Initial price update based on local data happens inside renderProducts
-          // Discount will remain 0 as input is disabled and appliedDiscount starts at 0
+        // handleNoProductState is called by renderProducts when the list is empty.
+        // It sets the productListEl content, resets discount, hides delivery, etc.
+        // The disabling of elements is also handled above in this 'else' block.
 
     }
 
     console.log("<- Initializing page finished.");
-}
+  }
 
-initializePage();
+  initializePage();
 
-// --- General Event Listeners (Attached regardless of API/Local mode, but might be affected by disabled state) ---
+  // --- General Event Listeners (Attached regardless of API/Local mode, but might be affected by disabled state) ---
 
-// Payment Option Styling (Listener still attached, but CSS/pointer-events: none handles disabled state)
-const optionItemsElements = document.querySelectorAll(".option-item");
-optionItemsElements.forEach((item) => {
-     item.addEventListener("click", function () {
-         console.log("Payment option clicked (listener attached).");
-         // Styling logic applies unless disabled-element class prevents event or styling
-          optionItemsElements.forEach((opt) => (opt.style.backgroundColor = ""));
-          this.style.backgroundColor = "#3B82F6";
+  // Payment Option Styling (Listener attached regardless, but CSS/pointer-events: none handles disabled state)
+  const optionItemsElements = document.querySelectorAll(".option-item");
+  if (optionItemsElements.length > 0) {
+      optionItemsElements.forEach((item) => {
+           item.addEventListener("click", function () {
+               console.log("Payment option clicked (listener attached).");
+               // Styling logic applies unless disabled-element class prevents event or styling
+                optionItemsElements.forEach((opt) => (opt.style.backgroundColor = ""));
+                this.style.backgroundColor = "#3B82F6";
+            });
       });
-});
+      console.log("Payment option listeners added.");
+  } else { console.warn("No elements with class 'option-item' found to attach listeners."); }
 
 
-// Delivery Day Styling (Listener attached if days are rendered in API mode, not in local mode init)
-// Function addDeliveryDayEventListeners exists and is called in renderDeliveryDays if data is available
-// No need for a general listener attachment here outside initializePage and renderDeliveryDays
+  // Delivery Day Styling (Listener attached if days are rendered in API mode, not in local mode)
+  // Function addDeliveryDayEventListeners exists and is called in renderDeliveryDays if data is available
 
 
-// Quantity Buttons Event Listeners (Attached after rendering products - remain active)
-// Function addQuantityControlListeners exists and is called in renderProducts
+  // Quantity Buttons Event Listeners (Attached after rendering products - remain active)
+  // Function addQuantityControlListeners exists and is called in renderProducts
 
 
-// Close Button Event Listeners (Attached after rendering products - remain active)
-// Function addCloseButtonListeners exists and is called in renderProducts
-
+  // Close Button Event Listeners (Attached after rendering products - remain active)
+  // Function addCloseButtonListeners exists and is called in renderProducts
 
 });
