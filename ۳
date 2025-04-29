@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
         ];
-        // const data = []; // Uncomment this line to simulate no products fetched
+         //const data = []; // Uncomment this line to simulate no products fetched
         console.log("<- Fetching products resolved with data:", data);
         resolve(data);
       }, 700); // Simulate network delay
@@ -178,9 +178,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if(quantitySpan && priceSpan) {
               const quantity = parseInt(quantitySpan.textContent, 10);
-               // Remove " تومان" and commas before parsing price
-              const priceText = priceSpan.textContent.replace(' تومان', '').replace(/,/g, '');
-              const price = parseInt(priceText, 10);
+               // --- FIX: More robust price parsing ---
+               const priceText = priceSpan.textContent;
+               // Remove ALL non-digit characters from the price text
+               const cleanedPriceText = priceText.replace(/\D/g, '');
+               const price = parseInt(cleanedPriceText, 10);
+               // --- End FIX ---
+
 
               if (!isNaN(quantity) && !isNaN(price)) {
                   totalItemsCount += quantity; // Keep track of total number of items across all products
@@ -188,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   calculatedTotalDiscount += discountPerItem * quantity; // Summing discount * quantity for THIS item
                    console.log(`Item ID: ${item.dataset.productId || 'N/A'}, Quantity: ${quantity}, Price: ${price}, Item Total: ${price * quantity}`); // Log per item
               } else {
-                   console.warn(`Could not parse quantity or price for item ID: ${item.dataset.productId || 'N/A'}. Quantity text: "${quantitySpan.textContent}", Price text: "${priceSpan.textContent}"`);
+                   console.warn(`Could not parse quantity or price for item ID: ${item.dataset.productId || 'N/A'}. Quantity text: "${quantitySpan.textContent}", Price text: "${priceSpan.textContent}". Cleaned price text: "${cleanedPriceText}"`);
               }
           } else {
                console.warn(`Quantity or price span not found for item ID: ${item.dataset.productId || 'N/A'}`);
