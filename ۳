@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
    const loadingDeliveryDaysEl = document.getElementById("loading-delivery-days");
   const noProductMessageEl = document.getElementById("no-product-message");
   const payButton = document.getElementById("pay-button");
-  // productCardBody دیگر برای درج هدر استفاده نمی شود، اما نگه داشته شده است اگر نیازهای دیگری داشته باشید
   const productCardBody = document.querySelector('.col-md-9 .card-body');
 
 
@@ -160,6 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Update Order Details and Payment ---
 
   function updatePrices() {
+      console.log("updatePrices called"); // Add this line to check if it's called
       const productItems = productListEl.querySelectorAll('.product-item'); // Get all product items currently in DOM
       let totalItemsCount = 0;
       let calculatedTotalPrice = 0;
@@ -177,8 +177,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
               if (!isNaN(quantity) && !isNaN(price)) {
                   totalItemsCount += quantity; // Keep track of total number of items across all products
-                  calculatedTotalPrice += price * quantity;
-                  calculatedTotalDiscount += discountPerItem * quantity;
+                  calculatedTotalPrice += price * quantity; // Summing price * quantity for THIS item
+                  calculatedTotalDiscount += discountPerItem * quantity; // Summing discount * quantity for THIS item
+                   console.log(`Item ID: ${item.dataset.productId}, Quantity: ${quantity}, Price: ${price}, Item Total: ${price * quantity}`); // Log per item
               } else {
                    console.warn("Could not parse quantity or price for item:", item);
               }
@@ -186,6 +187,9 @@ document.addEventListener("DOMContentLoaded", () => {
                console.warn("Quantity or price span not found for item:", item);
           }
       });
+
+       console.log("Total Calculated Price (before discount):", calculatedTotalPrice); // Log total calculation
+       console.log("Total Calculated Discount:", calculatedTotalDiscount); // Log total calculation
 
 
     // orderQuantityEl is removed, not updating a total count in order summary list
@@ -199,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
       payButton.classList.add('disabled');
       payButton.style.pointerEvents = 'none';
          // Trigger the "no product" state if all items removed or total is 0
-         handleNoProductState();
+         handleNoProductState(); // This call is correct here now
     } else {
        payButton.classList.remove('disabled');
        payButton.style.pointerEvents = 'auto';
@@ -237,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
       noProductMessageEl.style.display = 'block';
       loadingDeliveryDaysEl.style.display = 'none'; // Ensure loading is hidden
       deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days content
-      updatePrices(); // Ensure prices are 0
+      updatePrices(); // Ensure prices are 0 - This call is correct here
       disableOrderControls(); // Disable any potential controls (though they shouldn't exist)
   }
 
@@ -293,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 let currentQuantity = parseInt(quantitySpan.textContent, 10);
                 currentQuantity++;
                 quantitySpan.textContent = currentQuantity;
-                updatePrices();
+                updatePrices(); // Recalculate totals after quantity change
             };
             // Assign a unique name and store it globally for removal
             const listenerName = 'plusListener_' + Math.random().toString(36).substr(2, 9);
@@ -318,7 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (currentQuantity > 1) { // Prevent quantity from going below 1
                     currentQuantity--;
                     quantitySpan.textContent = currentQuantity;
-                    updatePrices();
+                    updatePrices(); // Recalculate totals after quantity change
                 }
             };
              // Assign a unique name and store it globally for removal
@@ -349,8 +353,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 if(productItemEl) {
                     productItemEl.remove(); // Remove the product element from the DOM
                     console.log(`Product with ID ${productIdToRemove} removed.`);
-                    updatePrices(); // Recalculate totals
-                    // Check if the list is now empty - updatePrices already calls handleNoProductState
+                    updatePrices(); // Recalculate totals after removal
+                    // The check for empty list and calling handleNoProductState is now correctly done inside updatePrices
                 }
             };
              // Assign a unique name and store it globally for removal
@@ -374,7 +378,10 @@ document.addEventListener("DOMContentLoaded", () => {
      loadingDeliveryDaysEl.style.display = 'block';
      // Clear any static header that might be in the HTML - important for the new layout
      const staticHeader = productCardBody.querySelector('.table-container > .d-flex.justify-content-between.border-bottom');
-     if(staticHeader) staticHeader.remove();
+     if(staticHeader) {
+          console.warn("Static product header found during initialization. Removing it.");
+          staticHeader.remove();
+      }
 
 
     try {
@@ -416,9 +423,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       } else {
         // If no products initially fetched or an error occurred during product fetch
-        console.log("No products fetched or error occurred.");
+        console.log("No products fetched or error occurred during fetch.");
         handleNoProductState(); // Trigger no product state
-        productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>"; // Show message in product area
+        productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>"; // Ensure message is shown in product area
       }
 
     } catch (error) {
