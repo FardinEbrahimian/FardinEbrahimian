@@ -1,179 +1,270 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحه پرداخت</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Vazirmatn', sans-serif; /* You might need to include a Persian font */
-        }
-        .card {
-            border: none;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-        .order-summary .list-group-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1.25rem;
-            border: none;
-        }
-        .order-summary .list-group-item:last-child {
-             border-bottom: 1px solid rgba(0,0,0,.125);
-        }
-        .order-summary .list-group-item span:last-child {
-            font-weight: bold;
-        }
-        .payment-source .amount {
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-        .btn-success-custom {
-            background-color: #66bb6a; /* A shade of green */
-            border-color: #66bb6a;
-            color: white;
-            width: 100%;
-            padding: 0.75rem;
-            font-size: 1.1rem;
-        }
-        .btn-success-custom:hover {
-            background-color: #5cb860;
-            border-color: #5cb860;
-        }
-        .online-payment .payment-methods img {
-            height: 40px;
-            margin: 0 10px;
-        }
-        .product-item {
-            display: flex;
-            align-items: center;
-        }
-        .product-item img {
-            width: 60px;
-            height: auto;
-            margin-left: 15px;
-            border-radius: 0.25rem;
-        }
-        .product-details {
-            flex-grow: 1;
-        }
-        .product-details .title {
-            font-weight: bold;
-        }
-        .product-details .description {
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-         .product-price {
-            font-weight: bold;
-            white-space: nowrap; /* Prevent price from wrapping */
-        }
-        .table > :not(caption) > * > * {
-            padding: 1rem 0.5rem; /* Adjust padding in table cells */
-        }
-         .table th {
-            color: #6c757d; /* Gray out table headers */
-             font-weight: normal;
-             border-bottom: 1px solid #dee2e6;
-        }
-    </style>
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/css/vazirmatn.css">
-</head>
-<body>
+document.addEventListener("DOMContentLoaded", () => {
+  const productListEl = document.getElementById("product-list");
+  const loadingProductsEl = document.getElementById("loading-products");
+  const orderQuantityEl = document.getElementById("order-quantity");
+  const orderTotalPriceEl = document.getElementById("order-total-price");
+  const orderDiscountEl = document.getElementById("order-discount");
+  const orderFinalPriceEl = document.getElementById("order-final-price");
+  const deliveryDaysCardEl = document.getElementById("delivery-days-card");
+  const deliveryDaysContainerEl = document.getElementById("delivery-days-container");
+   const loadingDeliveryDaysEl = document.getElementById("loading-delivery-days");
+  const noProductMessageEl = document.getElementById("no-product-message");
+  const plusBtn = document.getElementById("plusBtn");
+  const minusBtn = document.getElementById("minusBtn");
+  const payButton = document.getElementById("pay-button");
 
-    <div class="container py-4">
-        <div class="row g-4">
-            <div class="col-md-8">
-                <div class="card mb-4 online-payment">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="card-title mb-0">پرداخت اینترنتی</h5>
-                            <button class="btn btn-outline-secondary btn-sm">تغییر درگاه پرداخت</button>
-                        </div>
-                        <p class="card-text text-muted">پرداخت آنلاین با تمامی کارت‌های شتابی</p>
-                        <div class="payment-methods text-center py-3">
-                            <img src="placeholder-icon.png" alt="آیکون پرداخت">
-                            <img src="placeholder-icon.png" alt="آیکون پرداخت">
-                            <img src="placeholder-icon.png" alt="آیکون پرداخت">
-                        </div>
-                    </div>
-                </div>
+  let products = [];
+  let discountPerItem = 0;
+  let currentQuantity = 0; // Start with 0 quantity before products are loaded
+  let unitPrice = 0; // Will be set based on the first product (assuming one product for simplicity)
 
-                <div class="card">
-                    <div class="card-body">
-                        <table class="table table-borderless">
-                            <thead>
-                                <tr>
-                                    <th scope="col">محصول</th>
-                                    <th scope="col" class="text-start">مبلغ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="product-item">
-                                            <img src="placeholder-product.png" alt="تصویر محصول">
-                                            <div class="product-details">
-                                                <div class="title">افزونه لاگین شو، افزونه ورود و ثبت نام با شماره موبایل</div>
-                                                <div class="description">پشتیبانی شش ماهه (رایگان)</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-start product-price">
-                                        ۳۶۴,۰۰۰ تومان
-                                    </td>
-                                </tr>
-                                </tbody>
-                        </table>
-                    </div>
+  // --- API Calls ---
+  // NOTE: Replace these URLs with your actual API endpoints
+
+  async function fetchProducts() {
+    try {
+      const response = await fetch('/api/products'); // Replace with your actual API URL
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      // Depending on your error handling, you might want to return an empty array or re-throw
+      throw error; // Re-throw to be caught by initializePage
+    }
+  }
+
+  async function fetchDiscount() {
+    try {
+      const response = await fetch('/api/discount'); // Replace with your actual API URL
+       if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching discount:", error);
+       throw error; // Re-throw to be caught by initializePage
+    }
+  }
+
+  async function fetchDeliveryDays() {
+    try {
+      const response = await fetch('/api/delivery-days'); // Replace with your actual API URL
+       if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching delivery days:", error);
+       throw error; // Re-throw to be caught by initializePage
+    }
+  }
+
+  // --- Rendering Functions ---
+
+  function renderProducts(productsToRender) {
+    productListEl.innerHTML = ""; // Clear current content
+    loadingProductsEl.style.display = "none"; // Hide loading message
+
+    if (productsToRender && productsToRender.length > 0) {
+      productsToRender.forEach(product => {
+        const productHtml = `
+          <div class="table-row">
+            <div class="table-cell mt-3">
+              <div class="d-flex justify-content-between align-items-center product-item">
+                <div class="d-flex align-items-center flex-wrap">
+                  <img src="${product.image}" alt="تصویر محصول" width="150" height="150">
+                  <div class="me-4">
+                    <div class="title">${product.name}</div>
+                    <div class="description">${product.description}</div>
+                  </div>
                 </div>
+                <span>${new Intl.NumberFormat("fa-IR").format(product.price)} تومان</span>
+              </div>
             </div>
+          </div>
+        `;
+        productListEl.innerHTML += productHtml; // Append product HTML
+      });
+      // For simplicity, we'll use the price of the first product found
+      unitPrice = productsToRender[0].price;
+      currentQuantity = 1; // Set initial quantity to 1 when products are available
+       enableOrderControls();
+    } else {
+      productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
+      unitPrice = 0;
+      currentQuantity = 0;
+      disableOrderControls();
+    }
+     updatePrices(); // Update details based on loaded products and initial quantity
+  }
 
-            <div class="col-md-4">
-                <div class="card mb-4 order-summary">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">جزئیات سفارش</h5>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <span>۱ مورد</span>
-                                <span>تعداد</span>
-                            </li>
-                             <li class="list-group-item">
-                                <span>۴۵۵,۰۰۰ تومان</span>
-                                <span>قیمت کل</span>
-                            </li>
-                             <li class="list-group-item">
-                                <span class="text-danger">-۹۱,۰۰۰ تومان</span>
-                                <span>تخفیف</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+  function renderDeliveryDays(daysToRender) {
+     deliveryDaysContainerEl.innerHTML = ""; // Clear current content
+     loadingDeliveryDaysEl.style.display = "none"; // Hide loading message
 
-                <div class="card payment-source">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">مبلغ قابل پرداخت</h5>
-                        <div class="amount">
-                            ۳۶۴,۰۰۰ تومان
-                        </div>
-                        <button class="btn btn-success-custom mb-3">پرداخت و تکمیل سفارش</button>
-                        <small class="d-block text-center text-muted">
-                            در صورت منتقل نشدن به درگاه پرداخت VPN خود را غیرفعال و صفحه را رفرش کنید.
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    if (daysToRender && daysToRender.length > 0) {
+      const daysHtml = daysToRender.map(day => `
+        <button class="delivery-day my-2 bg-transparent border border-dark-subtle rounded-2 p-3">
+          ${day.dayOfWeek} <br> ${day.date}
+        </button>
+      `).join('');
+      deliveryDaysContainerEl.innerHTML = daysHtml;
+       addDeliveryDayEventListeners(); // Add event listeners to new buttons
+    } else {
+      deliveryDaysContainerEl.innerHTML = "<div class='text-center py-3'>روز تحویلی در دسترس نیست.</div>";
+    }
+  }
 
-</body>
-</html>
+  // --- Update Order Details and Payment ---
+
+  function updatePrices() {
+    const totalPrice = unitPrice * currentQuantity;
+    const totalDiscount = discountPerItem * currentQuantity;
+    const finalPrice = totalPrice - totalDiscount; // Assuming no delivery cost added here for simplicity based on original code
+
+    orderQuantityEl.textContent = currentQuantity;
+    orderTotalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(totalPrice) + " تومان";
+    orderDiscountEl.textContent = new Intl.NumberFormat("fa-IR").format(totalDiscount) + " تومان";
+    orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(finalPrice);
+
+    // Disable pay button if quantity is 0
+    if (currentQuantity === 0) {
+      payButton.classList.add('disabled');
+      payButton.style.pointerEvents = 'none'; // Prevent click events
+    } else {
+       payButton.classList.remove('disabled');
+       payButton.style.pointerEvents = 'auto';
+    }
+  }
+
+   // --- Control Button States ---
+  function enableOrderControls() {
+      plusBtn.disabled = false;
+      minusBtn.disabled = false;
+  }
+
+  function disableOrderControls() {
+       plusBtn.disabled = true;
+       minusBtn.disabled = true;
+  }
+
+
+  // --- Event Listeners ---
+
+   // Payment Option Styling
+  const optionItems = document.querySelectorAll(".option-item");
+  optionItems.forEach((item) => {
+    item.addEventListener("click", function () {
+      optionItems.forEach((opt) => (opt.style.backgroundColor = ""));
+      this.style.backgroundColor = "#3B82F6"; // Highlight selected
+    });
+  });
+
+
+  // Delivery Day Styling (Needs to be called after rendering days)
+  function addDeliveryDayEventListeners() {
+     const deliveryButtons = document.querySelectorAll(".delivery-day");
+      deliveryButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          deliveryButtons.forEach((btn) => {
+            btn.classList.remove("bg-primary", "text-white", "border-0");
+            btn.classList.add("bg-transparent", "border", "border-dark-subtle");
+          });
+
+          button.classList.remove("bg-transparent", "border-dark-subtle");
+          button.classList.add("bg-primary", "text-white", "border-0");
+        });
+      });
+  }
+
+
+  // Quantity Buttons
+  plusBtn.addEventListener("click", () => {
+    currentQuantity++;
+    updatePrices();
+  });
+
+  minusBtn.addEventListener("click", () => {
+    if (currentQuantity > 1) { // Prevent quantity from going below 1
+      currentQuantity--;
+      updatePrices();
+    }
+  });
+
+  // --- Initial Data Fetch and Rendering ---
+
+  async function initializePage() {
+    // Initially disable buttons and set prices to 0
+    disableOrderControls();
+    updatePrices();
+    deliveryDaysCardEl.style.display = 'none'; // Hide delivery section initially
+    noProductMessageEl.style.display = 'block'; // Show no product message initially
+    loadingDeliveryDaysEl.style.display = 'block'; // Show loading for delivery days initially
+
+
+    try {
+      // Fetch Products
+      products = await fetchProducts();
+      renderProducts(products); // This will also set initial quantity and enable/disable controls
+
+      if (products && products.length > 0) {
+        // If products exist, fetch discount and delivery days
+        try {
+            const discountData = await fetchDiscount();
+            discountPerItem = discountData.discountPerItem || 0;
+        } catch (discountError) {
+             console.error("Could not fetch discount, using default 0:", discountError);
+             discountPerItem = 0; // Default to 0 if discount fetch fails
+        }
+
+        try {
+            const deliveryDays = await fetchDeliveryDays();
+            renderDeliveryDays(deliveryDays);
+             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading after fetching days
+        } catch (deliveryError) {
+             console.error("Could not fetch delivery days:", deliveryError);
+             renderDeliveryDays([]); // Render empty state for delivery days
+             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading even on error
+        }
+
+
+        // Show delivery days section if products are available
+        deliveryDaysCardEl.style.display = 'block';
+        noProductMessageEl.style.display = 'none';
+         updatePrices(); // Update prices again after fetching discount
+
+
+      } else {
+        // If no products
+        discountPerItem = 0;
+        deliveryDaysCardEl.style.display = 'none'; // Hide delivery section
+        noProductMessageEl.style.display = 'block'; // Show no product message
+        loadingDeliveryDaysEl.style.display = 'none'; // Hide loading for delivery days
+         deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days content
+         updatePrices(); // Ensure prices are 0
+      }
+
+    } catch (error) {
+      console.error("Critical error during page initialization:", error);
+      // Handle critical errors (e.g., product fetch failed)
+      productListEl.innerHTML = "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات. لطفا مجددا تلاش کنید.</div>";
+      loadingProductsEl.style.display = "none";
+      loadingDeliveryDaysEl.style.display = "none";
+      deliveryDaysCardEl.style.display = 'none'; // Hide delivery section on error
+      noProductMessageEl.style.display = 'block'; // Show no product message on error
+       disableOrderControls();
+       discountPerItem = 0;
+       unitPrice = 0;
+       currentQuantity = 0;
+       updatePrices(); // Ensure prices are 0
+    }
+  }
+
+  initializePage(); // Call the function to start the process on page load
+});
