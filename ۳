@@ -198,12 +198,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const finalPrice = calculatedTotalPrice - calculatedTotalDiscount;
     orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(finalPrice);
 
-    // Disable pay button if no product items remain in the list (visible in DOM)
-    if (productItems.length === 0 || calculatedTotalPrice <= 0) { // Also check if total price is 0 or less
+    // Disable pay button if no product items remain in the list (visible in DOM) or total price is 0 or less
+    if (productItems.length === 0 || calculatedTotalPrice <= 0) {
       payButton.classList.add('disabled');
       payButton.style.pointerEvents = 'none';
-         // Trigger the "no product" state if all items removed or total is 0
-         handleNoProductState(); // This call is correct here now
+         // *** FIX: Removed the call to handleNoProductState() from here ***
+         // handleNoProductState() is now ONLY called when the LAST item is removed or on initial load failure.
     } else {
        payButton.classList.remove('disabled');
        payButton.style.pointerEvents = 'auto';
