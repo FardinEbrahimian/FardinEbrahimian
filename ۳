@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const productListEl = document.getElementById("product-list");
   const loadingProductsEl = document.getElementById("loading-products");
-  const orderQuantityEl = document.getElementById("order-quantity");
+  // orderQuantityEl دیگر در بخش جزئیات سفارش نیست، حذف شده است.
   const orderTotalPriceEl = document.getElementById("order-total-price");
   const orderDiscountEl = document.getElementById("order-discount");
   const orderFinalPriceEl = document.getElementById("order-final-price");
@@ -9,16 +9,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const deliveryDaysContainerEl = document.getElementById("delivery-days-container");
   const loadingDeliveryDaysEl = document.getElementById("loading-delivery-days");
   const noProductMessageEl = document.getElementById("no-product-message");
-  const plusBtn = document.getElementById("plusBtn");
-  const minusBtn = document.getElementById("minusBtn");
+  // plusBtn و minusBtn دیگر با ID در این سطح وجود ندارند، حذف شده‌اند.
   const payButton = document.getElementById("pay-button");
 
   let products = [];
   let discountPerItem = 0;
-  let currentQuantity = 0; // Start with 0 quantity before products are loaded
+  // currentQuantity اکنون برای محصول اول مدیریت می‌شود
+  // let currentQuantity = 0; // Initialized in renderProducts based on product availability
   let unitPrice = 0; // Will be set based on the first product (assuming one product for simplicity)
 
   // --- Simulated API Calls ---
+  // NOTE: Replace these URLs with your actual API endpoints
 
   async function fetchProducts() {
     // Simulate fetching product data from an API
@@ -75,33 +76,41 @@ document.addEventListener("DOMContentLoaded", () => {
     loadingProductsEl.style.display = "none"; // Hide loading message
 
     if (productsToRender && productsToRender.length > 0) {
-      productsToRender.forEach(product => {
-        const productHtml = `
-          <div class="table-row">
-            <div class="table-cell mt-3">
-              <div class="d-flex justify-content-between align-items-center product-item">
-                <div class="d-flex align-items-center flex-wrap">
-                  <img src="${product.image}" alt="تصویر محصول" width="150" height="150">
-                  <div class="me-4">
-                    <div class="title">${product.name}</div>
-                    <div class="description">${product.description}</div>
-                  </div>
+        // Assuming only one product for simplicity as per original structure
+      const product = productsToRender[0];
+      const productHtml = `
+        <div class="table-row">
+          <div class="table-cell mt-3">
+            <div class="d-flex justify-content-between align-items-center product-item">
+              <div class="d-flex align-items-center flex-wrap">
+                <img src="${product.image}" alt="تصویر محصول" width="150" height="150">
+                <div class="me-4">
+                  <div class="title">${product.name}</div>
+                  <div class="description">${product.description}</div>
                 </div>
+              </div>
+              <div class="d-flex flex-column align-items-end">
                 <span>${new Intl.NumberFormat("fa-IR").format(product.price)} تومان</span>
+                 <div class="d-flex align-items-center mt-2 product-quantity-controls">
+                  <button class="bg-transparent border border-danger-subtle rounded-circle px-2 minusBtn">-</button>
+                  <div class="d-inline mx-2"><span class="product-quantity">1</span> مورد</div>
+                  <button class="bg-transparent border border-danger-subtle rounded-circle px-2 plusBtn">+</button>
+                </div>
               </div>
             </div>
           </div>
-        `;
-        productListEl.innerHTML += productHtml; // Append product HTML
-      });
-      // For simplicity, we'll use the price of the first product found
-      unitPrice = productsToRender[0].price;
-      currentQuantity = 1; // Set initial quantity to 1 when products are available
+        </div>
+      `;
+      productListEl.innerHTML = productHtml; // Set product HTML
+
+      unitPrice = product.price;
+      // currentQuantity will be read from the span element
        enableOrderControls();
+       addQuantityControlListeners(); // Add listeners to the new buttons
     } else {
       productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
       unitPrice = 0;
-      currentQuantity = 0;
+      // currentQuantity will be 0 as the span won't exist or will show 0
       disableOrderControls();
     }
      updatePrices(); // Update details based on loaded products and initial quantity
@@ -110,6 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderDeliveryDays(daysToRender) {
      deliveryDaysContainerEl.innerHTML = ""; // Clear current content
      loadingDeliveryDaysEl.style.display = "none"; // Hide loading message
+
 
     if (daysToRender && daysToRender.length > 0) {
       const daysHtml = daysToRender.map(day => `
@@ -127,11 +137,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Update Order Details and Payment ---
 
   function updatePrices() {
+      // Get current quantity from the product item span
+      const quantitySpan = productListEl.querySelector('.product-quantity');
+      const currentQuantity = quantitySpan ? parseInt(quantitySpan.textContent, 10) : 0;
+
     const totalPrice = unitPrice * currentQuantity;
     const totalDiscount = discountPerItem * currentQuantity;
     const finalPrice = totalPrice - totalDiscount; // Assuming no delivery cost added here for simplicity based on original code
 
-    orderQuantityEl.textContent = currentQuantity;
+    // orderQuantityEl is removed from order summary, only update other fields
     orderTotalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(totalPrice) + " تومان";
     orderDiscountEl.textContent = new Intl.NumberFormat("fa-IR").format(totalDiscount) + " تومان";
     orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(finalPrice);
@@ -146,26 +160,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Control Button States ---
+   // --- Control Button States ---
   function enableOrderControls() {
-      plusBtn.disabled = false;
-      minusBtn.disabled = false;
+      // Enable the buttons within the rendered product item
+      const plusBtn = productListEl.querySelector('.plusBtn');
+      const minusBtn = productListEl.querySelector('.minusBtn');
+      if(plusBtn) plusBtn.disabled = false;
+      if(minusBtn) minusBtn.disabled = false;
   }
 
   function disableOrderControls() {
-       plusBtn.disabled = true;
-       minusBtn.disabled = true;
+       // Disable the buttons within the rendered product item
+       const plusBtn = productListEl.querySelector('.plusBtn');
+       const minusBtn = productListEl.querySelector('.minusBtn');
+       if(plusBtn) plusBtn.disabled = true;
+       if(minusBtn) minusBtn.disabled = true;
   }
 
 
   // --- Event Listeners ---
 
-   // Payment Option Styling
+   // Payment Option Styling (remains the same)
   const optionItems = document.querySelectorAll(".option-item");
   optionItems.forEach((item) => {
     item.addEventListener("click", function () {
       optionItems.forEach((opt) => (opt.style.backgroundColor = ""));
-      this.style.backgroundColor = "#3B82F6";
+      this.style.backgroundColor = "#3B82F6"; // Highlight selected
     });
   });
 
@@ -186,59 +206,89 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+    // Quantity Buttons Event Listeners (Attached after rendering products)
+    function addQuantityControlListeners() {
+        const plusBtn = productListEl.querySelector('.plusBtn');
+        const minusBtn = productListEl.querySelector('.minusBtn');
+        const quantitySpan = productListEl.querySelector('.product-quantity');
 
-  // Quantity Buttons
-  plusBtn.addEventListener("click", () => {
-    currentQuantity++;
-    updatePrices();
-  });
+        if (!plusBtn || !minusBtn || !quantitySpan) return; // Exit if elements not found
 
-  minusBtn.addEventListener("click", () => {
-    if (currentQuantity > 1) { // Prevent quantity from going below 1
-      currentQuantity--;
-      updatePrices();
+        plusBtn.addEventListener("click", () => {
+            let currentQuantity = parseInt(quantitySpan.textContent, 10);
+            currentQuantity++;
+            quantitySpan.textContent = currentQuantity;
+            updatePrices();
+        });
+
+        minusBtn.addEventListener("click", () => {
+             let currentQuantity = parseInt(quantitySpan.textContent, 10);
+            if (currentQuantity > 1) { // Prevent quantity from going below 1
+                currentQuantity--;
+                quantitySpan.textContent = currentQuantity;
+                updatePrices();
+            }
+        });
     }
-  });
+
 
   // --- Initial Data Fetch and Rendering ---
 
   async function initializePage() {
     // Initially disable buttons and set prices to 0
-    disableOrderControls();
-    updatePrices();
+    disableOrderControls(); // This will target buttons if they exist after rendering
+    updatePrices(); // Sets prices to 0 initially
     deliveryDaysCardEl.style.display = 'none'; // Hide delivery section initially
     noProductMessageEl.style.display = 'block'; // Show no product message initially
+     loadingDeliveryDaysEl.style.display = 'block'; // Show loading for delivery days initially
+
 
     try {
       // Fetch Products
       products = await fetchProducts();
-      renderProducts(products);
+      renderProducts(products); // This will render products, set unitPrice, initial quantity, and add listeners
 
       if (products && products.length > 0) {
         // If products exist, fetch discount and delivery days
-        const discountData = await fetchDiscount();
-        discountPerItem = discountData.discountPerItem || 0;
+        try {
+            const discountData = await fetchDiscount();
+            discountPerItem = discountData.discountPerItem || 0;
+        } catch (discountError) {
+             console.error("Could not fetch discount, using default 0:", discountError);
+             discountPerItem = 0; // Default to 0 if discount fetch fails
+        }
 
-        const deliveryDays = await fetchDeliveryDays();
-        renderDeliveryDays(deliveryDays);
+        try {
+            const deliveryDays = await fetchDeliveryDays();
+            renderDeliveryDays(deliveryDays);
+             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading after fetching days
+        } catch (deliveryError) {
+             console.error("Could not fetch delivery days:", deliveryError);
+             renderDeliveryDays([]); // Render empty state for delivery days
+             loadingDeliveryDaysEl.style.display = 'none'; // Hide loading even on error
+        }
+
 
         // Show delivery days section if products are available
         deliveryDaysCardEl.style.display = 'block';
         noProductMessageEl.style.display = 'none';
+         updatePrices(); // Update prices again after fetching discount
+
 
       } else {
-        // If no products, ensure discount is 0 and hide delivery sections
+        // If no products
         discountPerItem = 0;
-        deliveryDaysCardEl.style.display = 'none';
-        noProductMessageEl.style.display = 'block'; // Keep showing no product message
+        deliveryDaysCardEl.style.display = 'none'; // Hide delivery section
+        noProductMessageEl.style.display = 'block'; // Show no product message
         loadingDeliveryDaysEl.style.display = 'none'; // Hide loading for delivery days
          deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days content
+         updatePrices(); // Ensure prices are 0
       }
 
     } catch (error) {
-      console.error("Error fetching data:", error);
-      // Handle errors (e.g., display an error message to the user)
-      productListEl.innerHTML = "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات.</div>";
+      console.error("Critical error during page initialization:", error);
+      // Handle critical errors (e.g., product fetch failed)
+      productListEl.innerHTML = "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات. لطفا مجددا تلاش کنید.</div>";
       loadingProductsEl.style.display = "none";
       loadingDeliveryDaysEl.style.display = "none";
       deliveryDaysCardEl.style.display = 'none'; // Hide delivery section on error
@@ -246,8 +296,8 @@ document.addEventListener("DOMContentLoaded", () => {
        disableOrderControls();
        discountPerItem = 0;
        unitPrice = 0;
-       currentQuantity = 0;
-       updatePrices();
+       // currentQuantity implicitly 0
+       updatePrices(); // Ensure prices are 0
     }
   }
 
