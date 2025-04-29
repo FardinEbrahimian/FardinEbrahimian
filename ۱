@@ -405,134 +405,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Event Listeners ---
 
-  // Payment Option Styling
+  // Payment Option Styling (Listener attached regardless, but CSS/pointer-events: none handles disabled state)
   const optionItemsElements = document.querySelectorAll(".option-item");
-  optionItemsElements.forEach((item) => {
-     // Listener only active if not disabled by the disabling logic in initializePage/updatePrices
-     item.addEventListener("click", function () {
-         console.log("Payment option clicked (listener attached).");
-         // Styling logic applies unless disabled-element class prevents event or styling
-          optionItemsElements.forEach((opt) => (opt.style.backgroundColor = ""));
-          this.style.backgroundColor = "#3B82F6";
+  if (optionItemsElements.length > 0) {
+      optionItemsElements.forEach((item) => {
+           item.addEventListener("click", function () {
+               console.log("Payment option clicked (listener attached).");
+               // Styling logic applies unless disabled-element class prevents event or styling
+                optionItemsElements.forEach((opt) => (opt.style.backgroundColor = ""));
+                this.style.backgroundColor = "#3B82F6";
+            });
       });
-  });
+      console.log("Payment option listeners added.");
+  } else { console.warn("No elements with class 'option-item' found to attach listeners."); }
 
 
-  // Delivery Day Styling
-  function addDeliveryDayEventListeners() {
-    console.log("-> Entering addDeliveryDayEventListeners");
-    const deliveryButtons = document.querySelectorAll(".delivery-day");
-    deliveryButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        console.log("Delivery day selected.");
-        deliveryButtons.forEach((btn) => {
-          btn.classList.remove("bg-primary", "text-white", "border-0");
-          btn.classList.add("bg-transparent", "border", "border-dark-subtle");
-        });
+  // Delivery Day Styling (Listener attached if days are rendered in API mode, not in local mode)
+  // Function addDeliveryDayEventListeners exists and is called in renderDeliveryDays if data is available
 
-        button.classList.remove("bg-transparent", "border-dark-subtle");
-        button.classList.add("bg-primary", "text-white", "border-0");
-      });
-    });
-    console.log("<- Delivery day listeners added.");
-  }
 
   // Quantity Buttons Event Listeners (Attached after rendering products - remain active)
-  function addQuantityControlListeners() {
-    console.log("-> Entering addQuantityControlListeners");
-    const plusBtns = productListEl.querySelectorAll(".plusBtn");
-    const minusBtns = productListEl.querySelectorAll(".minusBtn");
+  // Function addQuantityControlListeners exists and is called in renderProducts
 
-    plusBtns.forEach((button) => {
-      const oldListener = button.dataset.plusListener;
-      if (oldListener && window[oldListener]) {
-        button.removeEventListener("click", window[oldListener]);
-        window[oldListener] = null;
-      }
 
-      const newListener = (event) => {
-        const quantitySpan = event.target
-          .closest(".product-quantity-controls")
-          .querySelector(".product-quantity");
-        if (!quantitySpan) return;
-        let currentQuantity = parseInt(quantitySpan.textContent, 10);
-        currentQuantity++;
-        quantitySpan.textContent = currentQuantity;
-        updatePrices();
-        console.log("Plus button clicked.");
-      };
-      const listenerName =
-        "plusListener_" + Math.random().toString(36).substr(2, 9);
-      window[listenerName] = newListener;
-      button.addEventListener("click", newListener);
-      button.dataset.plusListener = listenerName;
-    });
-
-    minusBtns.forEach((button) => {
-      const oldListener = button.dataset.minusListener;
-      if (oldListener && window[oldListener]) {
-        button.removeEventListener("click", window[oldListener]);
-        window[oldListener] = null;
-      }
-
-      const newListener = (event) => {
-        const quantitySpan = event.target
-          .closest(".product-quantity-controls")
-          .querySelector(".product-quantity");
-        if (!quantitySpan) return;
-        let currentQuantity = parseInt(quantitySpan.textContent, 10);
-        if (currentQuantity > 1) {
-          currentQuantity--;
-          quantitySpan.textContent = currentQuantity;
-          updatePrices();
-          console.log("Minus button clicked.");
-        }
-      };
-      const listenerName =
-        "minusListener_" + Math.random().toString(36).substr(2, 9);
-      window[listenerName] = newListener;
-      button.addEventListener("click", newListener);
-      button.dataset.minusListener = listenerName;
-    });
-    console.log("<- Quantity control listeners added.");
-  }
-
-  function addCloseButtonListeners() {
-    console.log("-> Entering addCloseButtonListeners");
-    const removeButtons = productListEl.querySelectorAll(".remove-product-btn");
-
-    removeButtons.forEach((button) => {
-      const oldListener = button.dataset.removeListener;
-      if (oldListener && window[oldListener]) {
-        button.removeEventListener("click", window[oldListener]);
-        window[oldListener] = null;
-      }
-
-      const newListener = (event) => {
-        const productIdToRemove = event.target.dataset.productId;
-        const productItemEl = productListEl.querySelector(
-          `.product-item[data-product-id="${productIdToRemove}"]`
-        );
-
-        if (productItemEl) {
-          productItemEl.remove();
-          console.log(`Product with ID ${productIdToRemove} removed.`);
-          updatePrices();
-          if (productListEl.querySelectorAll(".product-item").length === 0) {
-            console.log("Last product removed. Calling handleNoProductState.");
-            handleNoProductState();
-          }
-        }
-        console.log("Remove button clicked.");
-      };
-      const listenerName =
-        "removeListener_" + Math.random().toString(36).substr(2, 9);
-      window[listenerName] = newListener;
-      button.addEventListener("click", newListener);
-      button.dataset.removeListener = listenerName;
-    });
-    console.log("<- Close button listeners added.");
-  }
+  // Close Button Event Listeners (Attached after rendering products - remain active)
+  // Function addCloseButtonListeners exists and is called in renderProducts
 
   // --- Discount Code Input Listener (Only active when useSimulatedApi is true) ---
   // Listener attached regardless, but logic inside depends on useSimulatedApi
@@ -606,6 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       staticHeader.remove();
     }
+
 
     if (useSimulatedApi) {
         console.log("Using simulated API.");
@@ -717,7 +615,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // --- Render products from local data (empty in this case) ---
         console.log("Rendering products from local data (empty).");
         productsData = localProductsData; // Set productsData to the empty local data array
-        renderProducts(productsData); // renderProducts will call handleNoProductState because productsData is empty
+        // renderProducts(productsData); // renderProducts will call handleNoProductState because productsData is empty
+        // Instead of calling renderProducts which calls handleNoProductState, just call handleNoProductState directly for clarity
+        handleNoProductState();
+
 
         // handleNoProductState is called by renderProducts when the list is empty.
         // It sets the productListEl content, resets discount, hides delivery, etc.
@@ -725,6 +626,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+    updatePrices(); // Call updatePrices once at the end of initializePage in both modes
     console.log("<- Initializing page finished.");
   }
 
@@ -733,7 +635,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- General Event Listeners (Attached regardless of API/Local mode, but might be affected by disabled state) ---
 
   // Payment Option Styling (Listener attached regardless, but CSS/pointer-events: none handles disabled state)
-  const optionItemsElements = document.querySelectorAll(".option-item");
+  const optionItemsElements = document.querySelectorAll(".option-item"); // Removed duplicate declaration here
   if (optionItemsElements.length > 0) {
       optionItemsElements.forEach((item) => {
            item.addEventListener("click", function () {
@@ -758,4 +660,52 @@ document.addEventListener("DOMContentLoaded", () => {
   // Close Button Event Listeners (Attached after rendering products - remain active)
   // Function addCloseButtonListeners exists and is called in renderProducts
 
-});
+  // --- Discount Code Input Listener (Only active when useSimulatedApi is true) ---
+  // Listener attached regardless, but logic inside depends on useSimulatedApi
+  if (discountCodeInputEl) {
+      discountCodeInputEl.addEventListener('change', async (event) => {
+          if (!useSimulatedApi) {
+               console.log("-> Discount code input changed (local mode - ignored).");
+               event.target.value = '';
+               appliedDiscount = 0;
+               updatePrices();
+               return;
+          }
+
+          console.log("-> Discount code input changed (API mode).");
+          const enteredCode = event.target.value.trim();
+          appliedDiscount = 0;
+
+          if (enteredCode) {
+              try {
+                  console.log("Fetching available discount codes...");
+                  const availableCodes = await fetchDiscountCodes();
+
+                  console.log(`Checking entered code "${enteredCode}" against available codes:`, availableCodes);
+                  const validCode = availableCodes.find(code => code.code.toUpperCase() === enteredCode.toUpperCase());
+
+                  if (validCode) {
+                      appliedDiscount = validCode.amount;
+                      console.log(`Valid discount code "${enteredCode}" applied. Discount amount: ${appliedDiscount}`);
+                  } else {
+                      appliedDiscount = 0;
+                      console.log(`Invalid discount code entered: "${enteredCode}". No discount applied.`);
+                  }
+              } catch (error) {
+                   console.error("Error fetching or applying discount code:", error);
+                   appliedDiscount = 0;
+              }
+          } else {
+               console.log("Discount code input cleared. Applied discount reset to 0.");
+               appliedDiscount = 0;
+          }
+
+          updatePrices();
+          console.log("<- Discount code input change listener finished.");
+      });
+       console.log("Discount code input listener added.");
+  } else {
+      console.error("Discount code input element with id 'discount-code-input' not found!");
+  }
+
+}); // <-- Closing brace for DOMContentLoaded listener
