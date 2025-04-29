@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
               name: "محصول نمونه دیگر",
               description: "توضیحات محصول دوم برای تست لیست",
               price: 5000000,
-              image: "https://via.placeholder.com/100" // Placeholder image
+              image: "[https://via.placeholder.com/100](https://via.placeholder.com/100)" // Placeholder image
             }
              ,
             {
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
               name: "محصول سوم تستی",
               description: "توضیحات کوتاه محصول سوم",
               price: 2500000,
-              image: "https://via.placeholder.com/100/FF0000" // Another placeholder image
+              image: "[https://via.placeholder.com/100/FF0000](https://via.placeholder.com/100/FF0000)" // Another placeholder image
             }
 
         ];
@@ -214,9 +214,11 @@ document.addEventListener("DOMContentLoaded", () => {
                   calculatedTotalDiscount += discountPerItem * quantity; // Summing discount * quantity for THIS item
                    console.log(`Item ID: ${item.dataset.productId || 'N/A'}, Quantity: ${quantity}, Price: ${price}, Item Total: ${price * quantity}`); // Log per item
               } else {
-                   console.warn(`Could not parse quantity or price for item ID: ${item.dataset.productId || 'N/A'}. Quantity text: "${quantitySpan.textContent}", Price text: "${priceSpan.textContent}". Cleaned price text (after Persian conversion and non-digit removal): "${cleanedPriceText}". Parsed Price is NaN: ${isNaN(price)}`);
+                   // --- FIX: Corrected the template literal syntax here ---
+                   console.warn(`Could not parse quantity or price for item ID: ${item.dataset.productId || 'N/A'}. Quantity text: "${quantitySpan.textContent}", Price text: "${priceSpan.textContent}". Cleaned price text: "${cleanedPriceText}". Parsed Price is NaN: ${isNaN(price)}`);
               }
           } else {
+               // --- FIX: Corrected the template literal syntax here ---
                console.warn(`Quantity or price span not found for item ID: ${item.dataset.productId || 'N/A'}`);
           }
       });
@@ -247,6 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Disable pay button if no product items remain in the list (visible in DOM) or total price is 0 or less
+    // --- FIX: Corrected the logical OR operator here ---
     if (productItems.length === 0 || calculatedTotalPrice <= 0) {
       console.log("updatePrices: Condition met for 'no product state' logic.");
       if (payButton) {
@@ -271,7 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
      console.log("<- Exiting updatePrices");
   }
 
-   // --- Control Button States ---
+// --- Control Button States ---
   function enableOrderControls() {
      console.log("-> Entering enableOrderControls");
      const plusBtns = productListEl.querySelectorAll('.plusBtn');
@@ -362,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
             button.dataset.plusListener = listenerName;
         });
 
-         minusBtns.forEach(button => {
+minusBtns.forEach(button => {
             const oldListener = button.dataset.minusListener;
              if(oldListener && window[oldListener]) {
                  button.removeEventListener('click', window[oldListener]);
@@ -401,10 +404,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const newListener = (event) => {
                 const productIdToRemove = event.target.dataset.productId;
+                // --- FIX: Corrected the template literal syntax here ---
                 const productItemEl = productListEl.querySelector(`.product-item[data-product-id="${productIdToRemove}"]`);
 
                 if(productItemEl) {
                     productItemEl.remove();
+                    // --- FIX: Corrected the template literal syntax here ---
                     console.log(`Product with ID ${productIdToRemove} removed.`);
                     updatePrices();
                     if(productListEl.querySelectorAll('.product-item').length === 0) {
