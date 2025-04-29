@@ -293,15 +293,15 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Element with id 'order-total-price' not found!");
     }
 
+    // --- Display the appliedDiscount directly ---
     if (orderDiscountEl) {
-      // --- FIX: Display the appliedDiscount directly ---
       orderDiscountEl.textContent =
         new Intl.NumberFormat("fa-IR").format(appliedDiscount) + " تومان";
     } else {
       console.error("Element with id 'order-discount' not found!");
     }
 
-    // --- FIX: Subtract the appliedDiscount from the total price ---
+    // --- Subtract the appliedDiscount from the total price ---
     let finalPrice = calculatedTotalPrice - appliedDiscount;
     // Ensure final price is not negative
     if (finalPrice < 0) {
@@ -317,9 +317,9 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Element with id 'order-final-price' not found!");
     }
 
-    // Disable pay button if no product items remain in the list (visible in DOM) or total price is 0
+    // Disable pay button if no product items remain or total price is 0
     // --- FIX: Corrected the logical OR operator here ---
-    if (productItems.length === 0 || calculatedTotalPrice <= 0) {
+    if (productItems.length === 0 || calculatedTotalPrice <= 0) { // <<-- This line is around line 228
       console.log("updatePrices: Condition met for 'no product state' logic.");
       if (payButton) {
         payButton.classList.add("disabled");
@@ -342,7 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
       deliveryDaysCardEl.style.display = "block"; // Assuming delivery days were fetched successfully initially
     }
     console.log("<- Exiting updatePrices");
-  }
+  } // <-- This closing brace should be correct for the function
 
   // --- Control Button States ---
   function enableOrderControls() {
