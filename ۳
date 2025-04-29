@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
               name: "محصول نمونه دیگر",
               description: "توضیحات محصول دوم برای تست لیست",
               price: 5000000,
-              image: "[https://via.placeholder.com/100](https://via.placeholder.com/100)" // Placeholder image
+              image: "https://via.placeholder.com/100" // Placeholder image
             }
              ,
             {
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
               name: "محصول سوم تستی",
               description: "توضیحات کوتاه محصول سوم",
               price: 2500000,
-              image: "[https://via.placeholder.com/100/FF0000](https://via.placeholder.com/100/FF0000)" // Another placeholder image
+              image: "https://via.placeholder.com/100/FF0000" // Another placeholder image
             }
 
         ];
@@ -212,6 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   totalItemsCount += quantity; // Keep track of total number of items across all products
                   calculatedTotalPrice += price * quantity; // Summing price * quantity for THIS item
                   calculatedTotalDiscount += discountPerItem * quantity; // Summing discount * quantity for THIS item
+                   // --- FIX: Corrected the template literal syntax here ---
                    console.log(`Item ID: ${item.dataset.productId || 'N/A'}, Quantity: ${quantity}, Price: ${price}, Item Total: ${price * quantity}`); // Log per item
               } else {
                    // --- FIX: Corrected the template literal syntax here ---
@@ -318,8 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-
-  function addDeliveryDayEventListeners() {
+function addDeliveryDayEventListeners() {
      console.log("-> Entering addDeliveryDayEventListeners");
      const deliveryButtons = document.querySelectorAll(".delivery-day");
       deliveryButtons.forEach((button) => {
@@ -402,7 +402,7 @@ minusBtns.forEach(button => {
                  window[oldListener] = null;
              }
 
-            const newListener = (event) => {
+const newListener = (event) => {
                 const productIdToRemove = event.target.dataset.productId;
                 // --- FIX: Corrected the template literal syntax here ---
                 const productItemEl = productListEl.querySelector(`.product-item[data-product-id="${productIdToRemove}"]`);
