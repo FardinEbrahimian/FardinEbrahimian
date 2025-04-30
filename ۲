@@ -1,40 +1,34 @@
-/*کد ها با api شبی سازی شده*/
+/*کد ها بدون api شبیه سازی شده و در حالت خطا در بارگذاری محصولات*/
 document.addEventListener("DOMContentLoaded", () => {
   const productListEl = document.getElementById("product-list");
   const loadingProductsEl = document.getElementById("loading-products");
-  // --- NEW: Get reference to the product error message element ---
-  const productErrorMessageEl = document.getElementById("product-error-message");
-
   const orderTotalPriceEl = document.getElementById("order-total-price");
   const orderShippingCostEl = document.getElementById("order-shipping-cost");
   const orderTaxCostEl = document.getElementById("order-tax-cost");
   const orderDiscountEl = document.getElementById("order-discount");
   const orderFinalPriceEl = document.getElementById("order-final-price");
-
   const deliveryDaysCardEl = document.getElementById("delivery-days-card");
+  const deliveryHeaderEl = document.getElementById("delivery-header"); // اضافه شده برای پنهان کردن سربرگ زمان تحویل
   const deliveryDaysContainerEl = document.getElementById(
     "delivery-days-container"
   );
   const loadingDeliveryDaysEl = document.getElementById(
     "loading-delivery-days"
   );
-  const noProductMessageEl = document.getElementById("no-product-message"); // This will now serve as a general error message
-
+  const noProductMessageEl = document.getElementById("no-product-message");
   const payButton = document.getElementById("pay-button");
   const productCardBody = document.querySelector(".col-md-9 .card-body");
   const userAddressContainerEl = document.getElementById(
     "user-address-container"
   );
   const discountCodeInputEl = document.getElementById("discount-code-input");
-  // --- NEW: Get reference to payment option items ---
-  const paymentOptionItems = document.querySelectorAll(".option-item");
+  const paymentOptionsContainerEl = document.getElementById("payment-options-container"); // اضافه شده برای دسترسی به درگاه‌ها
 
 
   let productsData = [];
   let appliedDiscount = 0;
   let shippingCost = 0;
   let taxCost = 0;
-
 
   const persianToAsciiDigits = (text) => {
     const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -57,71 +51,46 @@ document.addEventListener("DOMContentLoaded", () => {
     return result;
   };
 
-  // --- Simulated API Calls (These remain the same for now, simulation still needed) ---
+  // --- Simulated API Calls (Modified for Error State) ---
 
   async function fetchProducts() {
     console.log("-> Fetching products...");
-    return new Promise((resolve, reject) => { // Added reject
+    // Simulate fetching product data from an API
+    return new Promise((_, reject) => { // تغییر به reject برای شبیه سازی خطا
       setTimeout(() => {
-        const data = [
-           {
-            id: 1,
-            name: "اسپرسو ساز فیلیپس اتوماتیک سایکو",
-            description: "گارانتی اصالت و سلامت فیزیکی کالا",
-            price: 17800000,
-            image:
-              "./images/و-قیمت-اسپرسو-ساز-فیلیپس-اتوماتیک-سایکو-مدل-Saeco-SM878500-Xelsis-Deluxe-3.webp",
-          },
-          {
-            id: 2,
-            name: "محصول نمونه دیگر",
-            description: "توضیحات محصول دوم برای تست لیست",
-            price: 5000000,
-            image: "https://via.placeholder.com/100",
-          },
-        ];
-        // const data = []; // Uncomment this line to simulate no products
-        // reject(new Error("Failed to fetch products")); // Uncomment this line to simulate a fetch error
-        console.log("<- Fetching products resolved with data:", data);
-        resolve(data);
-      }, 700);
+        console.error("Simulating product load error!"); // لاگ خطای شبیه سازی شده
+        reject(new Error("Simulated product load error")); // پرتاب خطا
+      }, 700); // Simulate network delay
     });
   }
 
+  // این توابع شبیه سازی شده برای حفظ ساختار باقی می‌مانند،
+  // اما در حالت خطای محصولات، ممکن است فراخوانی نشوند یا خروجی آن‌ها نادیده گرفته شود.
   async function fetchDiscountCodes() {
-    console.log("-> Fetching discount codes...");
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const data = [
-          { code: "SALE10", amount: 500000 },
-          { code: "ZARISFREE", amount: 19000 },
-        ];
-        console.log("<- Fetching discount codes resolved with data:", data);
-        resolve(data);
-      }, 400);
-    });
+      console.log("-> Fetching discount codes...");
+       return new Promise((resolve) => {
+        setTimeout(() => {
+          const data = []; // برگرداندن آرایه خالی یا خطا برای شبیه سازی
+          console.log("<- Fetching discount codes resolved (or simulated error).");
+          resolve(data); // یا reject(new Error("..."))
+        }, 400);
+      });
   }
 
   async function fetchDeliveryDays() {
-    console.log("-> Fetching delivery days...");
-    return new Promise((resolve, reject) => { // Added reject
-      setTimeout(() => {
-        const data = [
-          { dayOfWeek: "شنبه", date: "۷ بهمن" },
-          { dayOfWeek: "یکشنبه", date: "۸ بهمن" },
-          { dayOfWeek: "دوشنبه", date: "۹ بهمن" },
-        ];
-        // const data = []; // Uncomment this line to simulate no delivery days fetched
-         // reject(new Error("Failed to fetch delivery days")); // Uncomment to simulate error
-        console.log("<- Fetching delivery days resolved with data:", data);
-        resolve(data);
-      }, 500);
-    });
+      console.log("-> Fetching delivery days...");
+       return new Promise((resolve) => {
+        setTimeout(() => {
+          const data = []; // برگرداندن آرایه خالی برای شبیه سازی حالت بدون روز تحویل
+          console.log("<- Fetching delivery days resolved with empty data.");
+          resolve(data);
+        }, 500);
+      });
   }
 
   async function fetchUserAddress() {
       console.log("-> Fetching user address...");
-      return new Promise((resolve, reject) => { // Added reject
+      return new Promise((resolve) => {
           setTimeout(() => {
               const addressData = {
                   street: "خیابان انقلاب، کوچه دانشگاه",
@@ -129,22 +98,20 @@ document.addEventListener("DOMContentLoaded", () => {
                   unit: "واحد ۳",
                   city: "تهران",
                   postalCode: "۱۲۳۴۵۶۷۸۹۰",
-                  fullAddress: "تهران، خیابان انقلاب، کوچه دانشگاه، پلاک ۱۲، واحد ۳، کد پستی: ۱۲۳۴۵۶۷۸۹۰"
+                  fullAddress: "تهران، خیابان انقلاب، کوچه دانشگاه، پلاک ۱۲، واحد ۳، کد پستی: ۱۲۳۴۵۶۷۸۹۰" // Concatenated for simplicity
               };
-              // const addressData = null; // Uncomment to simulate no address found
-              // reject(new Error("Failed to fetch address")); // Uncomment to simulate error
+               // const addressData = null; // Uncomment to simulate no address found
               console.log("<- Fetching user address resolved with data:", addressData);
               resolve(addressData);
           }, 600);
       });
   }
 
-  async function fetchShippingCost() {
+   async function fetchShippingCost() {
       console.log("-> Fetching shipping cost...");
-      return new Promise((resolve, reject) => { // Added reject
+       return new Promise((resolve) => {
           setTimeout(() => {
-              const cost = 19000;
-              // reject(new Error("Failed to fetch shipping cost")); // Uncomment to simulate error
+              const cost = 0; // در حالت خطا هزینه ارسال 0 شبیه سازی می‌شود
               console.log("<- Fetching shipping cost resolved with data:", cost);
               resolve(cost);
           }, 450);
@@ -153,113 +120,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
    async function fetchTaxCost() {
       console.log("-> Fetching tax cost...");
-       return new Promise((resolve, reject) => { // Added reject
+       return new Promise((resolve) => {
           setTimeout(() => {
-               const cost = 50000;
-              // reject(new Error("Failed to fetch tax cost")); // Uncomment to simulate error
+               const cost = 0; // در حالت خطا هزینه مالیات 0 شبیه سازی می‌شود
                console.log("<- Fetching tax cost resolved with data:", cost);
               resolve(cost);
           }, 350);
-       });
+      });
    }
-  // --- End Simulated API Calls ---
 
 
-  // --- Rendering Functions ---
+  // --- Rendering Functions (Simplified for Error State) ---
 
   function renderProducts(productsToRender) {
-    console.log("-> Entering renderProducts");
-    loadingProductsEl.style.display = "none"; // Hide loading message
-    productErrorMessageEl.style.display = "none"; // Hide error message
-
-    if (productsToRender && productsToRender.length > 0) {
-      productListEl.innerHTML = ""; // Clear current content
-      productsToRender.forEach((product) => {
-        const productHtml = `
-            <div class="product-item card mb-2" data-product-id="${product.id}">
-              <div class="card-body d-flex flex-wrap align-items-center p-3">
-              <button type="button" class="btn-close ms-2 remove-product-btn col-md-1 col-sm-12" aria-label="حذف محصول" data-product-id="${
-                product.id
-              }"></button>
-                <div class="d-flex align-items-center col-md-7  col-sm-12">
-                   <img src="${
-                     product.image
-                   }" alt="تصویر محصول" width="100" height="100" class="mx-2 rounded">
-                   <div>
-                      <div class="title fw-bold">${product.name}</div>
-                      <div class="description text-muted small">${
-                        product.description
-                      }</div>
-                   </div>
-                </div>
-                <div class="d-flex flex-column align-items-start mx-2 col-md-2  col-sm-12">
-                  <span class="product-price fw-bold">${new Intl.NumberFormat(
-                    "fa-IR"
-                  ).format(product.price)} تومان</span>
-                </div>
-                <div class="d-flex align-items-center mt-2 product-quantity-controls col-md-2  col-sm-12">
-                <button class="bg-transparent border-light-subtle  rounded-circle px-1 py-1 fw-bold d-flex align-items-center justify-content-center plusBtn">
-                    <img src="./images/plus-svgrepo-com.svg" alt="" width="15" height="15">
-                </button>
-                <div class="d-inline mx-2"><span class="product-quantity">1</span></div> <span class="ms-2">مورد</span>
-                <button class="bg-transparent border-light-subtle rounded-circle px-1 py-1 fw-bold d-flex align-items-center justify-content-center minusBtn">
-                    <img src="./images/minus-svgrepo-com.svg" alt="" width="15" height="15">
-                </button>
-                </div>
-              </div>
-            </div>
-          `;
-        productListEl.innerHTML += productHtml; // Append each product
-      });
-
-      addQuantityControlListeners();
-      addCloseButtonListeners();
-      enableOrderControls(); // Enable buttons now that products are rendered
-    } else {
-      // If no products are returned (empty array, not an error)
-      productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
-       // This state might still need other parts to be active depending on requirements.
-       // For now, we'll let initializePage handle this case separately from a fetch ERROR.
-       // Reverting product list display logic here to only show products or "no products" text.
-    }
-    console.log("<- Exiting renderProducts");
+    // این تابع در حالت خطا فراخوانی نمی‌شود، محتوای بخش محصولات مستقیماً در catch تنظیم می‌شود
+    console.log("-> renderProducts called, but should not happen in error state.");
   }
 
-   // --- NEW: Function to display product fetch error ---
-   function displayProductFetchError() {
-       console.log("-> Entering displayProductFetchError");
-       loadingProductsEl.style.display = "none"; // Hide loading
-       productListEl.innerHTML = ""; // Clear any previous product list or text
-       productErrorMessageEl.style.display = "block"; // Show the error message
-       console.log("<- Product fetch error message displayed.");
-   }
-  // --- END NEW Function ---
-
-
   function renderDeliveryDays(daysToRender) {
-    console.log("-> Entering renderDeliveryDays");
-    deliveryDaysContainerEl.innerHTML = ""; // Clear current content
-    loadingDeliveryDaysEl.style.display = "none"; // Hide loading message
-
-    if (daysToRender && daysToRender.length > 0) {
-      const daysHtml = daysToRender
-        .map(
-          (day) => `
-          <button class="delivery-day my-2 bg-transparent border border-dark-subtle rounded-2 p-3">
-            ${day.dayOfWeek} <br> ${day.date}
-          </button>
-        `
-        )
-        .join("");
-      deliveryDaysContainerEl.innerHTML = daysHtml;
-      addDeliveryDayEventListeners();
-       deliveryDaysContainerEl.style.display = 'block'; // Ensure delivery days container is visible
-    } else {
-      deliveryDaysContainerEl.innerHTML =
-        "<div class='text-center py-3'>روز تحویلی در دسترس نیست.</div>";
-       deliveryDaysContainerEl.style.display = 'block'; // Ensure delivery days container is visible even if empty
-    }
-    console.log("<- Exiting renderDeliveryDays");
+    // این تابع در حالت خطا فراخوانی نمی‌شود، بخش زمان تحویل پنهان می‌شود
+     console.log("-> renderDeliveryDays called, but should not happen in error state.");
   }
 
   function renderUserAddress(addressData) {
@@ -276,54 +156,34 @@ document.addEventListener("DOMContentLoaded", () => {
               <p class="mb-0 text-muted small">
                   ${addressData.fullAddress}
               </p>
-              <!-- Optional: Add a button/link to change address -->
-              <!-- <a href="#" class="btn btn-sm btn-outline-secondary mt-2">تغییر آدرس</a> -->
-          `;
+              `;
           userAddressContainerEl.innerHTML = addressHtml;
-          userAddressContainerEl.style.display = 'block'; // Ensure address container is visible
           console.log("User address rendered.");
       } else {
            userAddressContainerEl.innerHTML = `
               <div class="fw-bold mb-2">آدرس تحویل:</div>
               <p class="mb-0 text-muted small">
-                  آدرسی ثبت نشده است. لطفا در پروفایل کاربری خود آدرس را وارد کنید.
+                  بارگذاری آدرس با خطا مواجه شد یا آدرسی ثبت نشده است.
               </p>
-               <a href="#" class="btn btn-sm btn-outline-secondary mt-2">ثبت آدرس</a>
-          `;
-          userAddressContainerEl.style.display = 'block'; // Ensure address container is visible even if no address data
+              `;
            console.log("No user address data available to render.");
       }
       console.log("<- Exiting renderUserAddress");
   }
 
 
+  // --- Update Order Details and Payment ---
+
   function updatePrices() {
     console.log("-> Entering updatePrices");
-    const productItems = productListEl.querySelectorAll(".product-item");
-    let calculatedProductTotalPrice = 0;
+    // در حالت خطا، این مقادیر قبلاً در catch به 0 تنظیم شده‌اند
+    const calculatedProductTotalPrice = 0;
 
-    productItems.forEach((item) => {
-      const quantitySpan = item.querySelector(".product-quantity");
-      const priceSpan = item.querySelector(".product-price");
+    console.log("Total Product Price:", calculatedProductTotalPrice);
+    console.log("Shipping Cost:", shippingCost);
+    console.log("Tax Cost:", taxCost);
+    console.log("Applied Discount:", appliedDiscount);
 
-      if (quantitySpan && priceSpan) {
-        const quantity = parseInt(quantitySpan.textContent, 10);
-        const priceText = priceSpan.textContent;
-        const textWithAsciiDigits = persianToAsciiDigits(priceText);
-        const cleanedPriceText = textWithAsciiDigits.replace(/\D/g, "");
-        const price = parseInt(cleanedPriceText, 10);
-
-        if (!isNaN(quantity) && !isNaN(price)) {
-          calculatedProductTotalPrice += price * quantity;
-        } else {
-          console.warn(`Could not parse quantity or price for item.`);
-        }
-      } else {
-        console.warn(`Quantity or price span not found for item.`);
-      }
-    });
-
-    // Update display for each cost item
     if (orderTotalPriceEl) {
       orderTotalPriceEl.textContent =
         new Intl.NumberFormat("fa-IR").format(calculatedProductTotalPrice) + " تومان";
@@ -333,397 +193,3 @@ document.addEventListener("DOMContentLoaded", () => {
       orderShippingCostEl.textContent =
         new Intl.NumberFormat("fa-IR").format(shippingCost) + " تومان";
     } else { console.error("Element with id 'order-shipping-cost' not found!"); }
-
-     if (orderTaxCostEl) {
-      orderTaxCostEl.textContent =
-        new Intl.NumberFormat("fa-IR").format(taxCost) + " تومان";
-    } else { console.error("Element with id 'order-tax-cost' not found!"); }
-
-    if (orderDiscountEl) {
-      orderDiscountEl.textContent =
-        new Intl.NumberFormat("fa-IR").format(appliedDiscount) + " تومان";
-    } else { console.error("Element with id 'order-discount' not found!"); }
-
-
-    // Calculate Subtotal (Products + Shipping + Tax)
-    const subtotal = calculatedProductTotalPrice + shippingCost + taxCost;
-
-    // Calculate Final Price (Subtotal - Discount)
-    let finalPrice = subtotal - appliedDiscount;
-    if (finalPrice < 0) {
-      finalPrice = 0;
-    }
-
-    if (orderFinalPriceEl) {
-      orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(
-        finalPrice
-      );
-    } else { console.error("Element with id 'order-final-price' not found!"); }
-
-
-    // Pay button state logic remains based on products count and final price
-    // This logic is mainly for the *active* state, error state is handled by handleNoProductState
-    if (productItems.length > 0 && finalPrice > 0) {
-         if (payButton) {
-            payButton.classList.remove("disabled");
-            payButton.style.pointerEvents = "auto";
-         }
-    } else {
-         // If this state is reached NOT through handleNoProductState
-         if (payButton) {
-            payButton.classList.add("disabled");
-            payButton.style.pointerEvents = "none";
-         }
-    }
-
-    console.log("<- Exiting updatePrices");
-  }
-
-  function enableOrderControls() {
-    console.log("-> Entering enableOrderControls");
-    const plusBtns = productListEl.querySelectorAll(".plusBtn");
-    const minusBtns = productListEl.querySelectorAll(".minusBtn");
-    plusBtns.forEach((btn) => (btn.disabled = false));
-    minusBtns.forEach((btn) => (btn.disabled = false));
-    if (discountCodeInputEl) discountCodeInputEl.disabled = false; // Enable discount input
-    if (payButton) { // Ensure button is enabled if conditions met
-        payButton.classList.remove("disabled");
-        payButton.style.pointerEvents = "auto";
-    }
-    paymentOptionItems.forEach(item => item.classList.remove('disabled')); // Enable payment options
-    console.log("<- Order controls enabled.");
-  }
-
-  function disableOrderControls() {
-    console.log("-> Entering disableOrderControls");
-    const plusBtns = productListEl.querySelectorAll(".plusBtn");
-    const minusBtns = productListEl.querySelectorAll(".minusBtn");
-    plusBtns.forEach((btn) => (btn.disabled = true));
-    minusBtns.forEach((btn) => (btn.disabled = true));
-    if (discountCodeInputEl) discountCodeInputEl.disabled = true; // Disable discount input
-     if (payButton) { // Ensure button is disabled
-        payButton.classList.add("disabled");
-        payButton.style.pointerEvents = "none";
-    }
-    paymentOptionItems.forEach(item => item.classList.add('disabled')); // Disable payment options
-    console.log("<- Order controls disabled.");
-  }
-
-
-  // --- Modified to handle both "no products" and "product fetch error" states ---
-  function handleCriticalState(errorMessage = "محصولی برای نمایش وجود ندارد.", isError = false) {
-    console.log(`-> Entering handleCriticalState (isError: ${isError})`);
-
-    // Reset costs and discount
-    appliedDiscount = 0;
-    shippingCost = 0;
-    taxCost = 0;
-
-    // Update price displays to 0
-    updatePrices();
-
-    // Product List Area
-    loadingProductsEl.style.display = "none"; // Hide product loading
-    productListEl.innerHTML = ""; // Clear product items
-    if (isError) {
-         productErrorMessageEl.style.display = "block"; // Show fetch error message
-         // The text for productErrorMessageEl is already in HTML
-         console.log("Displaying product fetch error message.");
-    } else {
-         productErrorMessageEl.style.display = "none"; // Hide fetch error message
-        // Show "no products" message if it's just empty data, though HTML already has this in product-list if empty
-         productListEl.innerHTML = `<div class='text-center py-5'>${errorMessage}</div>`;
-         console.log("Displaying 'no products' message.");
-    }
-
-
-    // Delivery Time Section
-    deliveryDaysCardEl.style.display = "block"; // Show the delivery card
-    noProductMessageEl.style.display = "block"; // Show the general error/no-product message
-    loadingDeliveryDaysEl.style.display = "none"; // Hide delivery days loading
-    deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days content
-    deliveryDaysContainerEl.style.display = 'none'; // Hide the delivery days container itself
-
-    if(userAddressContainerEl) {
-         userAddressContainerEl.innerHTML = ""; // Clear address content
-         userAddressContainerEl.style.display = 'none'; // Hide the address container itself
-    }
-
-
-    // Order Summary Section
-    // Prices are already set to 0 by updatePrices() call above
-    disableOrderControls(); // This disables discount input and pay button
-
-
-    // Payment Methods Section
-    // Payment options and pay button disabled by disableOrderControls() call above
-    // Ensure final price is 0 (handled by updatePrices)
-
-
-    console.log("<- Exiting handleCriticalState");
-  }
-
-
-  // --- Event Listeners ---
-  // (These remain the same, ensure they don't break when controls are disabled)
-
-  const optionItems = document.querySelectorAll(".option-item");
-  optionItems.forEach((item) => {
-    item.addEventListener("click", function () {
-        // Only react if not disabled
-        if (!this.classList.contains('disabled')) {
-            optionItems.forEach((opt) => {
-                opt.style.backgroundColor = "";
-                 // Also remove active styling if any
-                 opt.classList.remove('border-primary'); // Example of removing active border
-                 opt.classList.add('border-dark-subtle'); // Example of adding default border
-            });
-            this.style.backgroundColor = "#3B82F6";
-             // Add active styling if any
-            this.classList.add('border-primary'); // Example of adding active border
-            this.classList.remove('border-dark-subtle'); // Example of removing default border
-            console.log("Payment option clicked.");
-        }
-    });
-  });
-
-    // Initial selection styling (optional, remains)
-    if (optionItems.length > 0) {
-        optionItems[0].style.backgroundColor = "#3B82F6";
-         optionItems[0].classList.add('border-primary');
-         optionItems[0].classList.remove('border-dark-subtle');
-    }
-
-
-  function addDeliveryDayEventListeners() {
-    console.log("-> Entering addDeliveryDayEventListeners");
-    const deliveryButtons = document.querySelectorAll(".delivery-day");
-    deliveryButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        deliveryButtons.forEach((btn) => {
-          btn.classList.remove("bg-primary", "text-white", "border-0");
-          btn.classList.add("bg-transparent", "border", "border-dark-subtle");
-        });
-
-        button.classList.remove("bg-transparent", "border-dark-subtle");
-        button.classList.add("bg-primary", "text-white", "border-0");
-        console.log("Delivery day selected.");
-      });
-    });
-    console.log("<- Delivery day listeners added.");
-  }
-
-   // Quantity and Remove button listeners remain the same, but they should only be added
-   // if products are successfully rendered. Their actions trigger updatePrices which
-   // can handle the state transition to "no products" if the last item is removed.
-
-  function addQuantityControlListeners() {
-    console.log("-> Entering addQuantityControlListeners");
-    const plusBtns = productListEl.querySelectorAll(".plusBtn");
-    const minusBtns = productListEl.querySelectorAll(".minusBtn");
-
-    plusBtns.forEach((button) => {
-      button.addEventListener("click", (event) => {
-        const quantitySpan = event.target
-          .closest(".product-quantity-controls")
-          .querySelector(".product-quantity");
-        if (!quantitySpan) return;
-        let currentQuantity = parseInt(quantitySpan.textContent, 10);
-        currentQuantity++;
-        quantitySpan.textContent = currentQuantity;
-        updatePrices();
-      });
-    });
-
-    minusBtns.forEach((button) => {
-      button.addEventListener("click", (event) => {
-        const quantitySpan = event.target
-          .closest(".product-quantity-controls")
-          .querySelector(".product-quantity");
-        if (!quantitySpan) return;
-        let currentQuantity = parseInt(quantitySpan.textContent, 10);
-        if (currentQuantity > 1) {
-          currentQuantity--;
-          quantitySpan.textContent = currentQuantity;
-          updatePrices();
-        }
-      });
-    });
-    console.log("<- Quantity control listeners added.");
-  }
-
-  function addCloseButtonListeners() {
-    console.log("-> Entering addCloseButtonListeners");
-    const removeButtons = productListEl.querySelectorAll(".remove-product-btn");
-
-    removeButtons.forEach((button) => {
-      button.addEventListener("click", (event) => {
-        const productIdToRemove = event.target.dataset.productId;
-        const productItemEl = productListEl.querySelector(
-          `.product-item[data-product-id="${productIdToRemove}"]`
-        );
-
-        if (productItemEl) {
-          productItemEl.remove();
-          console.log(`Product with ID ${productIdToRemove} removed.`);
-          updatePrices();
-          if (productListEl.querySelectorAll(".product-item").length === 0) {
-            console.log("Last product removed. Calling handleCriticalState (no products).");
-            handleCriticalState("محصولی برای نمایش وجود ندارد."); // Call with no-product message
-          }
-        }
-      });
-    });
-    console.log("<- Close button listeners added.");
-  }
-
-
-  if (discountCodeInputEl) {
-    discountCodeInputEl.addEventListener("change", async (event) => {
-      // This listener should only fire if the input is NOT disabled
-      if (discountCodeInputEl.disabled) return;
-
-      console.log("-> Discount code input changed.");
-      const enteredCode = event.target.value.trim();
-      appliedDiscount = 0;
-
-      if (enteredCode) {
-        try {
-          console.log("Fetching available discount codes...");
-          const availableCodes = await fetchDiscountCodes();
-
-          console.log(
-            `Checking entered code "${enteredCode}" against available codes:`,
-            availableCodes
-          );
-          const validCode = availableCodes.find(
-            (code) => code.code.toUpperCase() === enteredCode.toUpperCase()
-          );
-
-          if (validCode) {
-            appliedDiscount = validCode.amount;
-            console.log(
-              `Valid discount code "${enteredCode}" applied. Discount amount: ${appliedDiscount}`
-            );
-          } else {
-            appliedDiscount = 0;
-            console.log(
-              `Invalid discount code entered: "${enteredCode}". No discount applied.`
-            );
-          }
-        } catch (error) {
-          console.error("Error fetching or applying discount code:", error);
-          appliedDiscount = 0;
-        }
-      } else {
-        console.log(
-          "Discount code input cleared. Applied discount reset to 0."
-        );
-        appliedDiscount = 0;
-      }
-
-      updatePrices();
-      console.log("<- Discount code input change listener finished.");
-    });
-    console.log("Discount code input listener added.");
-  } else {
-    console.error(
-      "Discount code input element with id 'discount-code-input' not found!"
-    );
-  }
-
-  // --- Initial Data Fetch and Rendering ---
-
-  async function initializePage() {
-    console.log("-> Initializing page...");
-
-    // Set initial states - assume error/no products until data is confirmed
-    disableOrderControls(); // Disable controls initially
-    appliedDiscount = 0;
-    shippingCost = 0;
-    taxCost = 0;
-    updatePrices(); // Display 0 prices
-
-    deliveryDaysCardEl.style.display = "block"; // Ensure the delivery card container is visible
-    noProductMessageEl.style.display = "block"; // Show the no product/error message by default
-    loadingDeliveryDaysEl.style.display = "none"; // Hide delivery days loading initially
-    deliveryDaysContainerEl.style.display = 'none'; // Hide delivery days list
-    if (userAddressContainerEl) userAddressContainerEl.style.display = 'none'; // Hide address container
-
-    loadingProductsEl.style.display = "block"; // Show product loading
-    productListEl.innerHTML = ""; // Clear product list
-    productErrorMessageEl.style.display = "none"; // Hide product error message initially
-
-
-    try {
-      // --- Fetch Products ---
-      productsData = await fetchProducts();
-      console.log("Products fetched:", productsData);
-
-      if (productsData && productsData.length > 0) {
-        // Success state: Products fetched and available
-        renderProducts(productsData);
-        console.log("Products rendered.");
-
-        deliveryDaysCardEl.style.display = "block"; // Keep delivery card visible
-        noProductMessageEl.style.display = "none"; // Hide no product message
-        loadingDeliveryDaysEl.style.display = "block"; // Show delivery days loading before fetch
-
-        // --- Fetch Delivery Days and User Address Concurrently ---
-        try {
-            const [deliveryDays, userAddress] = await Promise.all([
-                fetchDeliveryDays(),
-                fetchUserAddress()
-            ]);
-            renderDeliveryDays(deliveryDays); // This will show deliveryDaysContainerEl
-            renderUserAddress(userAddress); // This will show userAddressContainerEl
-            loadingDeliveryDaysEl.style.display = "none";
-            console.log("Delivery days and User address fetched.");
-        } catch (fetchOtherDataError) {
-            console.error("Could not fetch delivery days or user address:", fetchOtherDataError);
-             // Render empty states on error, containers will still be shown if products exist
-            renderDeliveryDays([]);
-            renderUserAddress(null);
-            loadingDeliveryDaysEl.style.display = "none";
-        }
-
-        // --- Fetch Shipping and Tax Costs Concurrently ---
-        try {
-            const [fetchedShipping, fetchedTax] = await Promise.all([
-                fetchShippingCost(),
-                fetchTaxCost()
-            ]);
-            shippingCost = fetchedShipping;
-            taxCost = fetchedTax;
-             console.log("Shipping and Tax costs fetched:", { shipping: shippingCost, tax: taxCost });
-        } catch (costError) {
-            console.error("Could not fetch shipping or tax costs:", costError);
-            shippingCost = 0;
-            taxCost = 0;
-        }
-
-        // Now update prices based on fetched products, shipping, and tax
-        updatePrices();
-        enableOrderControls(); // Enable controls since products are available
-
-      } else {
-        // "No products" state: Fetch was successful, but returned an empty array
-        console.log("No products fetched or error occurred during fetch (empty data).");
-        // This state is distinct from a fetch ERROR.
-        // Use handleCriticalState for the "no products" message
-        handleCriticalState("محصولی برای نمایش وجود ندارد.", false); // Pass false for isError
-      }
-    } catch (error) {
-      // Critical Error state: Fetching products failed (network error, server error, etc.)
-      console.error(
-        "Critical error during page initialization (product fetch failed):",
-        error
-      );
-       // Use handleCriticalState for the fetch error message
-      handleCriticalState("خطا در بارگذاری محصولات. لطفا مجدداً تلاش کنید.", true); // Pass true for isError
-    }
-    console.log("<- Initializing page finished.");
-  }
-
-  initializePage();
-});
