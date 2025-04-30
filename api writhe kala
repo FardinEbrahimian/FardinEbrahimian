@@ -3,6 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const productListEl = document.getElementById("product-list");
   const loadingProductsEl = document.getElementById("loading-products");
   const orderTotalPriceEl = document.getElementById("order-total-price");
+  // --- NEW: Get references for shipping and tax elements ---
+  const orderShippingCostEl = document.getElementById("order-shipping-cost");
+  const orderTaxCostEl = document.getElementById("order-tax-cost");
+  // --- End NEW ---
   const orderDiscountEl = document.getElementById("order-discount");
   const orderFinalPriceEl = document.getElementById("order-final-price");
   const deliveryDaysCardEl = document.getElementById("delivery-days-card");
@@ -20,16 +24,18 @@ document.addEventListener("DOMContentLoaded", () => {
     "user-address-container"
   );
 
-
   // --- Get reference to the discount code input field ---
   const discountCodeInputEl = document.getElementById("discount-code-input");
 
   let productsData = []; // Store the initial product data from API
   // discountPerItem is no longer used directly for calculation, but fetched for reference
-  let discountPerItem = 0; // Keep if needed elsewhere, otherwise can remove
+  // let discountPerItem = 0; // Keep if needed elsewhere, otherwise can remove
 
-  // --- New variable to store the applied discount amount ---
+  // --- Variables to store dynamically fetched costs ---
   let appliedDiscount = 0;
+  let shippingCost = 0; // Initialize shipping cost
+  let taxCost = 0;      // Initialize tax cost
+
 
   // --- Helper function to convert Persian digits to ASCII digits ---
   const persianToAsciiDigits = (text) => {
@@ -131,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- NEW: Simulated API to fetch user address ---
+  // --- Simulated API to fetch user address ---
   async function fetchUserAddress() {
       console.log("-> Fetching user address...");
       // Simulate fetching the user's address from an API (e.g., from user profile)
@@ -152,6 +158,34 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
   // --- END NEW Simulated API ---
+
+  // --- NEW: Simulated API to fetch shipping cost ---
+  async function fetchShippingCost() {
+      console.log("-> Fetching shipping cost...");
+       // In a real app, this might depend on cart contents and user address
+      return new Promise((resolve) => {
+          setTimeout(() => {
+              const cost = 19000; // Example fixed shipping cost
+              console.log("<- Fetching shipping cost resolved with data:", cost);
+              resolve(cost);
+          }, 450); // Simulate network delay
+      });
+  }
+  // --- END NEW Simulated API ---
+
+   // --- NEW: Simulated API to fetch tax cost ---
+   async function fetchTaxCost() {
+      console.log("-> Fetching tax cost...");
+      // In a real app, this might depend on cart contents, user address, and tax rules
+       return new Promise((resolve) => {
+          setTimeout(() => {
+               const cost = 50000; // Example fixed tax cost (adjust as needed)
+               console.log("<- Fetching tax cost resolved with data:", cost);
+              resolve(cost);
+          }, 350); // Simulate network delay
+      });
+   }
+   // --- END NEW Simulated API ---
 
 
   // --- Rendering Functions ---
@@ -223,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
       disableOrderControls(); // No products, disable controls
     }
-    updatePrices(); // Update totals based on rendered products
+    // updatePrices(); // Call updatePrices after fetching shipping and tax costs in initializePage
     console.log("<- Exiting renderProducts");
   }
 
@@ -248,12 +282,16 @@ document.addEventListener("DOMContentLoaded", () => {
       deliveryDaysContainerEl.innerHTML =
         "<div class='text-center py-3'>روز تحویلی در دسترس نیست.</div>";
     }
-    console.log("<- Exiting renderDeliveryDays");
+    console.log("<- Delivery day listeners added.");
   }
 
   // --- NEW: Rendering function for User Address ---
   function renderUserAddress(addressData) {
       console.log("-> Entering renderUserAddress");
+      if (!userAddressContainerEl) {
+          console.error("User address container element not found!");
+          return; // Exit if container not found
+      }
       userAddressContainerEl.innerHTML = ""; // Clear current content
 
       if (addressData && addressData.fullAddress) {
@@ -287,8 +325,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("-> Entering updatePrices"); // Added log
     const productItems = productListEl.querySelectorAll(".product-item"); // Get all product items currently in DOM
     let totalItemsCount = 0;
-    let calculatedTotalPrice = 0;
-    // appliedDiscount is used directly, no need for calculatedTotalDiscount here
+    let calculatedProductTotalPrice = 0; // Renamed for clarity
 
     productItems.forEach((item) => {
       const quantitySpan = item.querySelector(".product-quantity");
@@ -307,8 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!isNaN(quantity) && !isNaN(price)) {
           totalItemsCount += quantity; // Keep track of total number of items across all products
-          calculatedTotalPrice += price * quantity; // Summing price * quantity for THIS item
-          // Discount per item logic removed here
+          calculatedProductTotalPrice += price * quantity; // Summing price * quantity for THIS item
           console.log(
             `Item ID: ${
               item.dataset.productId || "N/A"
@@ -336,70 +372,77 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    console.log(
-      "Total Calculated Price (before discount):",
-      calculatedTotalPrice
-    ); // Log total calculation
+    console.log("Total Product Price:", calculatedProductTotalPrice); // Log total product calculation
+    console.log("Shipping Cost:", shippingCost); // Log shipping cost
+    console.log("Tax Cost:", taxCost);         // Log tax cost
     console.log("Applied Discount:", appliedDiscount); // Log the applied discount
 
-    // Check if elements for displaying prices exist before updating
+
+    // --- Update display for each cost item ---
     if (orderTotalPriceEl) {
       orderTotalPriceEl.textContent =
-        new Intl.NumberFormat("fa-IR").format(calculatedTotalPrice) + " تومان";
-    } else {
-      console.error("Element with id 'order-total-price' not found!");
-    }
+        new Intl.NumberFormat("fa-IR").format(calculatedProductTotalPrice) + " تومان";
+    } else { console.error("Element with id 'order-total-price' not found!"); }
 
-    // --- Display the appliedDiscount directly ---
+    if (orderShippingCostEl) {
+      orderShippingCostEl.textContent =
+        new Intl.NumberFormat("fa-IR").format(shippingCost) + " تومان";
+    } else { console.error("Element with id 'order-shipping-cost' not found!"); }
+
+     if (orderTaxCostEl) {
+      orderTaxCostEl.textContent =
+        new Intl.NumberFormat("fa-IR").format(taxCost) + " تومان";
+    } else { console.error("Element with id 'order-tax-cost' not found!"); }
+
     if (orderDiscountEl) {
       orderDiscountEl.textContent =
         new Intl.NumberFormat("fa-IR").format(appliedDiscount) + " تومان";
-    } else {
-      console.error("Element with id 'order-discount' not found!");
-    }
+    } else { console.error("Element with id 'order-discount' not found!"); }
+    // --- End Update display for each cost item ---
 
-    // --- Subtract the appliedDiscount from the total price ---
-    let finalPrice = calculatedTotalPrice - appliedDiscount;
+
+    // --- Calculate Subtotal (Products + Shipping + Tax) ---
+    const subtotal = calculatedProductTotalPrice + shippingCost + taxCost;
+    console.log("Subtotal (Products + Shipping + Tax):", subtotal); // Log subtotal
+
+    // --- Calculate Final Price (Subtotal - Discount) ---
+    let finalPrice = subtotal - appliedDiscount;
     // Ensure final price is not negative
     if (finalPrice < 0) {
       finalPrice = 0;
     }
+     console.log("Final Price (Subtotal - Discount):", finalPrice); // Log final price
 
     if (orderFinalPriceEl) {
       orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(
         finalPrice
       );
-    } else {
-      console.error("Element with id 'order-final-price' not found!");
-    }
+    } else { console.error("Element with id 'order-final-price' not found!"); }
 
-    // Disable pay button if no product items remain or total price is 0
-    // --- FIX: Corrected the logical OR operator here ---
-    if (productItems.length === 0 || calculatedTotalPrice <= 0) {
-      // <<-- This line is around line 228
-      console.log("updatePrices: Condition met for 'no product state' logic.");
+
+    // Disable pay button if no product items remain or final price is 0
+    // Use subtotal > 0 for button logic, as shipping/tax might exist even with 0 products initially,
+    // but payment button should only be active if there's something to pay for beyond just fixed costs.
+    // Or even simpler, base it on calculatedProductTotalPrice > 0 && finalPrice > 0. Let's stick to productItems.length for simplicity.
+    if (productItems.length === 0 || finalPrice <= 0) { // Changed condition to use finalPrice
+      console.log("updatePrices: Condition met for disabling pay button.");
       if (payButton) {
         payButton.classList.add("disabled");
         payButton.style.pointerEvents = "none";
-      } else {
-        console.error("Pay button not found!");
-      }
-      // handleNoProductState() is NOT called from here.
+      } else { console.error("Pay button not found!"); }
+
     } else {
-      console.log(
-        "updatePrices: Condition not met for 'no product state' logic."
-      );
+      console.log("updatePrices: Condition met for enabling pay button.");
       if (payButton) {
         payButton.classList.remove("disabled");
         payButton.style.pointerEvents = "auto";
-      } else {
-        console.error("Pay button not found!");
-      }
-      // noProductMessageEl.style.display = "none"; // Handled by handleNoProductState or initial state
-      // deliveryDaysCardEl.style.display = "block"; // Handled by initializePage
+      } else { console.error("Pay button not found!"); }
+
+      // The no-product message and delivery card visibility are handled by initializePage and handleNoProductState
+      // No need to explicitly set their display here based on price.
     }
     console.log("<- Exiting updatePrices");
-  } // <-- This closing brace should be correct for the function
+  }
 
   // --- Control Button States ---
   function enableOrderControls() {
@@ -424,18 +467,26 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleNoProductState() {
     console.log("-> Entering handleNoProductState");
     appliedDiscount = 0; // Reset applied discount if no products
+    shippingCost = 0; // Reset shipping cost in no-product state
+    taxCost = 0;      // Reset tax cost in no-product state
+
     deliveryDaysCardEl.style.display = "none";
     noProductMessageEl.style.display = "block";
     loadingDeliveryDaysEl.style.display = "none";
     deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days
-    userAddressContainerEl.innerHTML = ""; // Clear address container as well
-     userAddressContainerEl.innerHTML = `
-          <div class="fw-bold mb-2">آدرس تحویل:</div>
-          <p class="mb-0 text-muted small">
-              برای مشاهده آدرس، ابتدا محصولی به سبد خرید اضافه کنید.
-          </p>
-      `; // Optional message when no products
-    updatePrices(); // Ensure prices (including appliedDiscount which is now 0) are displayed correctly
+
+    if(userAddressContainerEl) {
+        userAddressContainerEl.innerHTML = ""; // Clear address container as well
+        userAddressContainerEl.innerHTML = `
+            <div class="fw-bold mb-2">آدرس تحویل:</div>
+            <p class="mb-0 text-muted small">
+                برای مشاهده آدرس، ابتدا محصولی به سبد خرید اضافه کنید.
+            </p>
+        `; // Optional message when no products
+    }
+
+
+    updatePrices(); // Ensure prices (including reset shipping, tax, discount) are displayed correctly
     disableOrderControls();
     console.log("<- Exiting handleNoProductState");
   }
@@ -476,13 +527,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const minusBtns = productListEl.querySelectorAll(".minusBtn");
 
     plusBtns.forEach((button) => {
-      const oldListener = button.dataset.plusListener;
-      if (oldListener && window[oldListener]) {
-        button.removeEventListener("click", window[oldListener]);
-        window[oldListener] = null;
-      }
-
-      const newListener = (event) => {
+      // Removed the old listener removal logic for simplicity,
+      // assuming listeners are only added once after initial render.
+      // If products are re-rendered dynamically, this logic should be re-added.
+      button.addEventListener("click", (event) => {
         const quantitySpan = event.target
           .closest(".product-quantity-controls")
           .querySelector(".product-quantity");
@@ -492,22 +540,12 @@ document.addEventListener("DOMContentLoaded", () => {
         quantitySpan.textContent = currentQuantity;
         updatePrices(); // Recalculate totals after quantity change
         console.log("Plus button clicked.");
-      };
-      const listenerName =
-        "plusListener_" + Math.random().toString(36).substr(2, 9);
-      window[listenerName] = newListener;
-      button.addEventListener("click", newListener);
-      button.dataset.plusListener = listenerName;
+      });
     });
 
     minusBtns.forEach((button) => {
-      const oldListener = button.dataset.minusListener;
-      if (oldListener && window[oldListener]) {
-        button.removeEventListener("click", window[oldListener]);
-        window[oldListener] = null;
-      }
-
-      const newListener = (event) => {
+       // Removed the old listener removal logic for simplicity
+      button.addEventListener("click", (event) => {
         const quantitySpan = event.target
           .closest(".product-quantity-controls")
           .querySelector(".product-quantity");
@@ -519,12 +557,7 @@ document.addEventListener("DOMContentLoaded", () => {
           updatePrices();
           console.log("Minus button clicked.");
         }
-      };
-      const listenerName =
-        "minusListener_" + Math.random().toString(36).substr(2, 9);
-      window[listenerName] = newListener;
-      button.addEventListener("click", newListener);
-      button.dataset.minusListener = listenerName;
+      });
     });
     console.log("<- Quantity control listeners added.");
   }
@@ -534,39 +567,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const removeButtons = productListEl.querySelectorAll(".remove-product-btn");
 
     removeButtons.forEach((button) => {
-      const oldListener = button.dataset.removeListener;
-      if (oldListener && window[oldListener]) {
-        button.removeEventListener("click", window[oldListener]);
-        window[oldListener] = null;
-      }
-
-      const newListener = (event) => {
+        // Removed the old listener removal logic for simplicity
+      button.addEventListener("click", (event) => {
         const productIdToRemove = event.target.dataset.productId;
-        // --- FIX: Corrected the template literal syntax here ---
         const productItemEl = productListEl.querySelector(
           `.product-item[data-product-id="${productIdToRemove}"]`
         );
 
         if (productItemEl) {
           productItemEl.remove();
-          // --- FIX: Corrected the template literal syntax here ---
           console.log(`Product with ID ${productIdToRemove} removed.`);
-          updatePrices();
+          updatePrices(); // Update prices after removing an item
           if (productListEl.querySelectorAll(".product-item").length === 0) {
             console.log("Last product removed. Calling handleNoProductState.");
-            handleNoProductState();
+            handleNoProductState(); // Handle state when no products are left
           }
         }
         console.log("Remove button clicked.");
-      };
-      const listenerName =
-        "removeListener_" + Math.random().toString(36).substr(2, 9);
-      window[listenerName] = newListener;
-      button.addEventListener("click", newListener);
-      button.dataset.removeListener = listenerName;
+      });
     });
     console.log("<- Close button listeners added.");
   }
+
 
   // --- Add event listener for the discount code input field ---
   // Check if the element exists before adding listener
@@ -637,12 +659,15 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("-> Initializing page...");
     disableOrderControls();
     appliedDiscount = 0; // Initialize appliedDiscount to 0 on page load
-    updatePrices(); // Sets prices to 0 initially (with 0 applied discount)
+    shippingCost = 0; // Initialize shipping cost
+    taxCost = 0;      // Initialize tax cost
+    updatePrices(); // Sets prices to 0 initially (with 0 applied costs/discount)
+
+    // Set initial loading states for delivery and address
     deliveryDaysCardEl.style.display = "none"; // Hide delivery card initially
     noProductMessageEl.style.display = "block"; // Show no product message initially
     loadingDeliveryDaysEl.style.display = "block"; // Keep delivery days loading visible initially
 
-    // --- NEW: Add loading state for address container ---
      if(userAddressContainerEl) {
          userAddressContainerEl.innerHTML = `
               <div class="text-center py-3">در حال بارگذاری آدرس...</div>
@@ -650,7 +675,7 @@ document.addEventListener("DOMContentLoaded", () => {
      } else {
          console.error("User address container element not found!");
      }
-    // --- END NEW Loading State ---
+
 
     const staticHeader = productCardBody.querySelector(
       ".table-container > .d-flex.justify-content-between.border-bottom"
@@ -674,36 +699,46 @@ document.addEventListener("DOMContentLoaded", () => {
         deliveryDaysCardEl.style.display = "block"; // Show delivery card if products exist
         noProductMessageEl.style.display = "none"; // Hide no product message
 
-        // --- Fetch and Render Delivery Days ---
-        try {
-          const deliveryDays = await fetchDeliveryDays();
-          renderDeliveryDays(deliveryDays);
-          loadingDeliveryDaysEl.style.display = "none";
-          console.log("Delivery days fetched:", deliveryDays);
-        } catch (deliveryError) {
-          console.error("Could not fetch delivery days:", deliveryError);
-          renderDeliveryDays([]); // Render empty state on error
-          loadingDeliveryDaysEl.style.display = "none";
-        }
 
-        // --- NEW: Fetch and Render User Address ---
+        // --- Fetch Delivery Days and User Address Concurrently ---
         try {
-            const userAddress = await fetchUserAddress();
+            const [deliveryDays, userAddress] = await Promise.all([
+                fetchDeliveryDays(),
+                fetchUserAddress()
+            ]);
+            renderDeliveryDays(deliveryDays);
             renderUserAddress(userAddress);
-            console.log("User address fetched:", userAddress);
-        } catch (addressError) {
-            console.error("Could not fetch user address:", addressError);
-             // Render an error message or empty state for the address
-            renderUserAddress(null); // Pass null to rendering function to show error/empty state
+            loadingDeliveryDaysEl.style.display = "none"; // Hide delivery loading after fetch attempt
+            console.log("Delivery days and User address fetched.");
+        } catch (fetchOtherDataError) {
+            console.error("Could not fetch delivery days or user address:", fetchOtherDataError);
+            renderDeliveryDays([]); // Render empty state for delivery days on error
+            renderUserAddress(null); // Render empty state for address on error
+            loadingDeliveryDaysEl.style.display = "none"; // Hide delivery loading
         }
-        // --- END NEW Fetch and Render User Address ---
 
+        // --- NEW: Fetch Shipping and Tax Costs Concurrently ---
+        try {
+            const [fetchedShipping, fetchedTax] = await Promise.all([
+                fetchShippingCost(),
+                fetchTaxCost()
+            ]);
+            shippingCost = fetchedShipping;
+            taxCost = fetchedTax;
+             console.log("Shipping and Tax costs fetched:", { shipping: shippingCost, tax: taxCost });
+        } catch (costError) {
+            console.error("Could not fetch shipping or tax costs:", costError);
+            shippingCost = 0; // Ensure they are 0 on error
+            taxCost = 0;
+        }
+        // --- END NEW Fetch Shipping and Tax ---
 
-        // updatePrices is called at the end of renderProducts for initial display
-        // It will use the appliedDiscount which is currently 0.
+        // Now update prices after all necessary data is potentially available
+        updatePrices(); // This function will now use shippingCost and taxCost
       } else {
         console.log("No products fetched or error occurred during fetch.");
-        handleNoProductState(); // This will also reset appliedDiscount to 0 and update prices
+        // If no products, costs/discount should be 0, which is handled by handleNoProductState
+        handleNoProductState();
         productListEl.innerHTML =
           "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>"; // Ensure product list shows empty message
       }
@@ -720,7 +755,8 @@ document.addEventListener("DOMContentLoaded", () => {
       productListEl.innerHTML =
         "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات. لطفا مجددا تلاش کنید.</div>";
       loadingProductsEl.style.display = "none";
-      handleNoProductState(); // This will also reset appliedDiscount to 0 and update prices, hide delivery card, etc.
+      // If critical error fetching products, handle no product state
+      handleNoProductState(); // This will also reset costs and update prices, hide delivery card, etc.
     }
     console.log("<- Initializing page finished.");
   }
