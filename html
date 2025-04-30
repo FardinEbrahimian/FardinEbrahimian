@@ -34,7 +34,8 @@
                 d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z">
               </path>
             </svg>
-            <span class="card-title h5 me-2 fw-bold">زمان تحویل</span> </div>
+            <span class="card-title h5 me-2 fw-bold">زمان تحویل</span>
+          </div>
           <div class="card-body" id="delivery-days-container">
             <div class="text-center py-3" id="loading-delivery-days">در حال بارگذاری روزهای تحویل...</div>
           </div>
@@ -50,9 +51,7 @@
           <h5 class="card-title pb-3 fw-bold border-bottom">جزئیات سفارش</h5>
           <div class="d-flex justify-content-between">
             <ul class="list-group list-group-flush p-0">
-              <li class="list-group-item border-0 px-0 py-2"><span>قیمت کل</span></li>
-              <li class="list-group-item border-0 px-0 py-2"><span>ارسال با چاپار</span></li>
-              <li class="list-group-item border-0 px-0 py-2"><span>مالیات</span></li>
+              <li class="list-group-item border-0 px-0 py-2"><span>قیمت کل محصولات</span></li> <li class="list-group-item border-0 px-0 py-2"><span>هزینه ارسال</span></li> <li class="list-group-item border-0 px-0 py-2"><span>مالیات</span></li>
               <li class="list-group-item border-0 px-0 py-2"><span>تخفیف</span></li>
             </ul>
             <ul class="list-group list-group-flush p-0 text-start">
@@ -60,18 +59,17 @@
                 <span id="order-total-price">0 تومان</span>
               </li>
               <li class="list-group-item border-0 px-0 py-2">
-                <span id="order-discount" class="">۱۹,۰۰۰ تومان</span>
-              </li>
+                <span id="order-shipping-cost" class="">0 تومان</span> </li>
               <li class="list-group-item border-0 px-0 py-2">
-                <span id="order-discount" class="">500,000 تومان</span>
-              </li>
+                <span id="order-tax-cost" class="">0 تومان</span> </li>
               <li class="list-group-item border-0 px-0 py-2">
                 <span id="order-discount" class="text-danger">0 تومان</span>
               </li>
             </ul>
           </div>
           <input class="border border-light-subtle px-3 py-2 mt-4" type="text" placeholder="کد تخفیف خود را وارد کنید"
-            id="discount-code-input"> </div>
+            id="discount-code-input">
+        </div>
 
         <div class="card mb-4">
           <div class="py-3 mx-3 border-bottom">
@@ -80,7 +78,7 @@
           </div>
           <div class="card-body" id="payment-options-container">
             <div class="rounded-2 border border-dark-subtle px-3 py-2 option-item mb-4">
-              <img src="./images/9f8f73037fc93b0cb261c73375b91f62e81fa5b210f459.png" alt="" width="25" height="25">
+              <img src="./images/9f8f73037fc93b0cb261c73375b91f62e81fa5b91f62e81fa5b210f459.png" alt="" width="25" height="25">
               <span>پرداخت با درگاه بانکی </span>
             </div>
             <div class="rounded-2 border border-dark-subtle px-3 py-2 option-item">
