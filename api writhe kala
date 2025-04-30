@@ -15,6 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const noProductMessageEl = document.getElementById("no-product-message");
   const payButton = document.getElementById("pay-button");
   const productCardBody = document.querySelector(".col-md-9 .card-body");
+  // --- NEW: Get reference to the user address container ---
+  const userAddressContainerEl = document.getElementById(
+    "user-address-container"
+  );
+
 
   // --- Get reference to the discount code input field ---
   const discountCodeInputEl = document.getElementById("discount-code-input");
@@ -126,6 +131,29 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // --- NEW: Simulated API to fetch user address ---
+  async function fetchUserAddress() {
+      console.log("-> Fetching user address...");
+      // Simulate fetching the user's address from an API (e.g., from user profile)
+      return new Promise((resolve) => {
+          setTimeout(() => {
+              const addressData = {
+                  street: "خیابان انقلاب، کوچه دانشگاه",
+                  building: "پلاک ۱۲",
+                  unit: "واحد ۳",
+                  city: "تهران",
+                  postalCode: "۱۲۳۴۵۶۷۸۹۰",
+                  fullAddress: "تهران، خیابان انقلاب، کوچه دانشگاه، پلاک ۱۲، واحد ۳، کد پستی: ۱۲۳۴۵۶۷۸۹۰" // Concatenated for simplicity
+              };
+              // const addressData = null; // Uncomment to simulate no address found
+              console.log("<- Fetching user address resolved with data:", addressData);
+              resolve(addressData);
+          }, 600); // Simulate network delay
+      });
+  }
+  // --- END NEW Simulated API ---
+
+
   // --- Rendering Functions ---
 
   function renderProducts(productsToRender) {
@@ -222,6 +250,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     console.log("<- Exiting renderDeliveryDays");
   }
+
+  // --- NEW: Rendering function for User Address ---
+  function renderUserAddress(addressData) {
+      console.log("-> Entering renderUserAddress");
+      userAddressContainerEl.innerHTML = ""; // Clear current content
+
+      if (addressData && addressData.fullAddress) {
+          const addressHtml = `
+              <div class="fw-bold mb-2">آدرس تحویل:</div>
+              <p class="mb-0 text-muted small">
+                  ${addressData.fullAddress}
+              </p>
+              `;
+          userAddressContainerEl.innerHTML = addressHtml;
+          console.log("User address rendered.");
+      } else {
+          // Handle cases where no address is returned or address data is incomplete
+           userAddressContainerEl.innerHTML = `
+              <div class="fw-bold mb-2">آدرس تحویل:</div>
+              <p class="mb-0 text-muted small">
+                  آدرسی ثبت نشده است. لطفا در پروفایل کاربری خود آدرس را وارد کنید.
+              </p>
+              <a href="#" class="btn btn-sm btn-outline-secondary mt-2">ثبت آدرس</a>
+          `;
+           console.log("No user address data available to render.");
+      }
+      console.log("<- Exiting renderUserAddress");
+  }
+  // --- END NEW Rendering function ---
+
 
   // --- Update Order Details and Payment ---
 
@@ -337,8 +395,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         console.error("Pay button not found!");
       }
-      noProductMessageEl.style.display = "none";
-      deliveryDaysCardEl.style.display = "block"; // Assuming delivery days were fetched successfully initially
+      // noProductMessageEl.style.display = "none"; // Handled by handleNoProductState or initial state
+      // deliveryDaysCardEl.style.display = "block"; // Handled by initializePage
     }
     console.log("<- Exiting updatePrices");
   } // <-- This closing brace should be correct for the function
@@ -369,7 +427,14 @@ document.addEventListener("DOMContentLoaded", () => {
     deliveryDaysCardEl.style.display = "none";
     noProductMessageEl.style.display = "block";
     loadingDeliveryDaysEl.style.display = "none";
-    deliveryDaysContainerEl.innerHTML = "";
+    deliveryDaysContainerEl.innerHTML = ""; // Clear delivery days
+    userAddressContainerEl.innerHTML = ""; // Clear address container as well
+     userAddressContainerEl.innerHTML = `
+          <div class="fw-bold mb-2">آدرس تحویل:</div>
+          <p class="mb-0 text-muted small">
+              برای مشاهده آدرس، ابتدا محصولی به سبد خرید اضافه کنید.
+          </p>
+      `; // Optional message when no products
     updatePrices(); // Ensure prices (including appliedDiscount which is now 0) are displayed correctly
     disableOrderControls();
     console.log("<- Exiting handleNoProductState");
@@ -571,12 +636,22 @@ document.addEventListener("DOMContentLoaded", () => {
   async function initializePage() {
     console.log("-> Initializing page...");
     disableOrderControls();
-    // --- FIX: Initialize appliedDiscount to 0 on page load ---
-    appliedDiscount = 0;
+    appliedDiscount = 0; // Initialize appliedDiscount to 0 on page load
     updatePrices(); // Sets prices to 0 initially (with 0 applied discount)
-    deliveryDaysCardEl.style.display = "none";
-    noProductMessageEl.style.display = "block";
-    loadingDeliveryDaysEl.style.display = "block";
+    deliveryDaysCardEl.style.display = "none"; // Hide delivery card initially
+    noProductMessageEl.style.display = "block"; // Show no product message initially
+    loadingDeliveryDaysEl.style.display = "block"; // Keep delivery days loading visible initially
+
+    // --- NEW: Add loading state for address container ---
+     if(userAddressContainerEl) {
+         userAddressContainerEl.innerHTML = `
+              <div class="text-center py-3">در حال بارگذاری آدرس...</div>
+         `;
+     } else {
+         console.error("User address container element not found!");
+     }
+    // --- END NEW Loading State ---
+
     const staticHeader = productCardBody.querySelector(
       ".table-container > .d-flex.justify-content-between.border-bottom"
     );
@@ -588,6 +663,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
+      // --- Fetch Products ---
       productsData = await fetchProducts();
       console.log("Products fetched:", productsData);
 
@@ -595,16 +671,10 @@ document.addEventListener("DOMContentLoaded", () => {
         renderProducts(productsData);
         console.log("Products rendered.");
 
-        // --- Fetch discount codes initially (optional, only needed if validation requires pre-fetched list) ---
-        // try {
-        //     const availableCodes = await fetchDiscountCodes();
-        //     console.log("Initial discount codes fetched:", availableCodes);
-        //     // Store availableCodes globally if needed for client-side validation logic elsewhere
-        // } catch (discountCodeError) {
-        //      console.error("Could not fetch initial discount codes:", discountCodeError);
-        // }
-        // --- End optional initial fetch ---
+        deliveryDaysCardEl.style.display = "block"; // Show delivery card if products exist
+        noProductMessageEl.style.display = "none"; // Hide no product message
 
+        // --- Fetch and Render Delivery Days ---
         try {
           const deliveryDays = await fetchDeliveryDays();
           renderDeliveryDays(deliveryDays);
@@ -612,19 +682,30 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log("Delivery days fetched:", deliveryDays);
         } catch (deliveryError) {
           console.error("Could not fetch delivery days:", deliveryError);
-          renderDeliveryDays([]);
+          renderDeliveryDays([]); // Render empty state on error
           loadingDeliveryDaysEl.style.display = "none";
         }
 
-        deliveryDaysCardEl.style.display = "block";
-        noProductMessageEl.style.display = "none";
+        // --- NEW: Fetch and Render User Address ---
+        try {
+            const userAddress = await fetchUserAddress();
+            renderUserAddress(userAddress);
+            console.log("User address fetched:", userAddress);
+        } catch (addressError) {
+            console.error("Could not fetch user address:", addressError);
+             // Render an error message or empty state for the address
+            renderUserAddress(null); // Pass null to rendering function to show error/empty state
+        }
+        // --- END NEW Fetch and Render User Address ---
+
+
         // updatePrices is called at the end of renderProducts for initial display
         // It will use the appliedDiscount which is currently 0.
       } else {
         console.log("No products fetched or error occurred during fetch.");
         handleNoProductState(); // This will also reset appliedDiscount to 0 and update prices
         productListEl.innerHTML =
-          "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
+          "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>"; // Ensure product list shows empty message
       }
     } catch (error) {
       console.error(
@@ -639,10 +720,11 @@ document.addEventListener("DOMContentLoaded", () => {
       productListEl.innerHTML =
         "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات. لطفا مجددا تلاش کنید.</div>";
       loadingProductsEl.style.display = "none";
-      handleNoProductState(); // This will also reset appliedDiscount to 0 and update prices
+      handleNoProductState(); // This will also reset appliedDiscount to 0 and update prices, hide delivery card, etc.
     }
     console.log("<- Initializing page finished.");
   }
 
   initializePage();
 });
+
