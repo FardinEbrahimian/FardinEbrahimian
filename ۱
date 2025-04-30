@@ -26,7 +26,6 @@
             <div class="table-container">
               <div class="table-body" id="product-list">
                 <div class="text-center py-5" id="loading-products">در حال بارگذاری محصولات...</div>
-                <!-- Error message container - controlled by JS -->
                 <div class="text-center py-5 text-danger" id="product-error-message" style="display: none;">
                     خطا در بارگذاری محصولات. لطفا مجدداً تلاش کنید.
                 </div>
@@ -51,13 +50,8 @@
             <div class="text-center py-3" id="loading-delivery-days">در حال بارگذاری روزهای تحویل...</div>
           </div>
 
-          <!-- محل نگهدارنده جدید برای آدرس کاربر -->
           <div class="card-body border-top pt-3" id="user-address-container">
-              <!-- آدرس پویا اینجا توسط JavaScript اضافه خواهد شد -->
-          </div>
-          <!-- پایان محل نگهدارنده آدرس -->
-
-          <!-- Changed alert-info to alert-danger and removed style="display: none;" -->
+              </div>
           <div class="alert alert-danger text-center mb-4" role="alert" id="no-product-message">
             هنوز محصولی انتخاب نشده است.
           </div>
@@ -67,9 +61,7 @@
           <h5 class="card-title pb-3 fw-bold border-bottom">جزئیات سفارش</h5>
           <div class="d-flex justify-content-between">
             <ul class="list-group list-group-flush p-0">
-              <li class="list-group-item border-0 px-0 py-2"><span>قیمت کل محصولات</span></li>
-              <li class="list-group-item border-0 px-0 py-2"><span>هزینه ارسال</span></li>
-              <li class="list-group-item border-0 px-0 py-2"><span>مالیات</span></li>
+              <li class="list-group-item border-0 px-0 py-2"><span>قیمت کل محصولات</span></li> <li class="list-group-item border-0 px-0 py-2"><span>هزینه ارسال</span></li> <li class="list-group-item border-0 px-0 py-2"><span>مالیات</span></li>
               <li class="list-group-item border-0 px-0 py-2"><span>تخفیف</span></li>
             </ul>
             <ul class="list-group list-group-flush p-0 text-start">
@@ -77,11 +69,9 @@
                 <span id="order-total-price">0 تومان</span>
               </li>
               <li class="list-group-item border-0 px-0 py-2">
-                <span id="order-shipping-cost" class="">0 تومان</span>
-              </li>
+                <span id="order-shipping-cost" class="">0 تومان</span> </li>
               <li class="list-group-item border-0 px-0 py-2">
-                <span id="order-tax-cost" class="">0 تومان</span>
-              </li>
+                <span id="order-tax-cost" class="">0 تومان</span> </li>
               <li class="list-group-item border-0 px-0 py-2">
                 <span id="order-discount" class="text-danger">0 تومان</span>
               </li>
@@ -97,13 +87,11 @@
             <span class="card-title h5 fw-bold">نحوه پرداخت</span>
           </div>
           <div class="card-body" id="payment-options-container">
-            <!-- Added class 'option-item' for easy selection -->
             <div class="rounded-2 border border-dark-subtle px-3 py-2 option-item mb-4">
               <img src="./images/9f8f73037fc93b0cb261c73375b91f62e81fa5b210f459.png" alt="" width="25" height="25">
               <span>پرداخت با درگاه بانکی </span>
             </div>
-             <!-- Added class 'option-item' for easy selection -->
-            <div class="rounded-2 border border-dark-subtle px-3 py-2 option-item">
+             <div class="rounded-2 border border-dark-subtle px-3 py-2 option-item">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 49 71" fill="none">
                 <path
                   d="M39.7025 26.4303L16.5525 39.7903C13.5839 41.5054 11.4179 44.3292 10.5309 47.6409C9.64395 50.9526 10.1085 54.481 11.8225 57.4503L15.2525 63.3903C15.3479 63.5488 15.4936 63.6708 15.6663 63.7371C15.839 63.8033 16.0289 63.81 16.2059 63.756C16.3828 63.702 16.5366 63.5904 16.6429 63.439C16.7492 63.2876 16.8018 63.105 16.7925 62.9203C16.6331 60.5536 17.1294 58.1888 18.2268 56.0859C19.3241 53.9829 20.98 52.2232 23.0125 51.0003L37.4225 42.6703C40.0551 41.1472 41.9771 38.6434 42.768 35.7066C43.5589 32.7699 43.1542 29.6394 41.6425 27.0003C41.5535 26.8345 41.4325 26.6881 41.2864 26.5696C41.1404 26.451 40.9722 26.3626 40.7917 26.3096C40.6112 26.2565 40.422 26.2399 40.235 26.2606C40.048 26.2813 39.867 26.339 39.7025 26.4303Z"
@@ -154,7 +142,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-  <!-- <script src="./appAPI.js"></script> -->
   <script src="./appAPI 2.js"></script>
 </body>
 
