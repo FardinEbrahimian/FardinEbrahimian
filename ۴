@@ -1,753 +1,644 @@
+داخل قسمت محصولات یک محصول ویژه قرار بده که بخش انتخاب تعداد رو نداشته باشه و شرط وجود محصول این هست گه اگر این محصول به تنهایی در سبد قرار داشت فقط قسمت نحوه پرداخت فعال شود بقیه موارد به همان صورت غیر فعال بماند
+
 /*کد ها بدون api شبی سازی شده*/
 document.addEventListener("DOMContentLoaded", () => {
-    const productListEl = document.getElementById("product-list");
-    const loadingProductsEl = document.getElementById("loading-products");
-    const productErrorMessageEl = document.getElementById("product-error-message");
-    const orderTotalPriceEl = document.getElementById("order-total-price");
-    const orderShippingCostEl = document.getElementById("order-shipping-cost");
-    const orderTaxCostEl = document.getElementById("order-tax-cost");
-    const orderDiscountEl = document.getElementById("order-discount");
-    const orderFinalPriceEl = document.getElementById("order-final-price");
-    const deliveryDaysCardEl = document.getElementById("delivery-days-card");
-    const deliveryDaysContainerEl = document.getElementById("delivery-days-container");
-    const loadingDeliveryDaysEl = document.getElementById("loading-delivery-days");
-    const noProductMessageEl = document.getElementById("no-product-message");
-    const payButton = document.getElementById("pay-button");
-    const productCardBody = document.querySelector(".col-md-9 .card-body"); // Assuming this is the container for product list and related info
-    const userAddressContainerEl = document.getElementById("user-address-container");
-    const discountCodeInputEl = document.getElementById("discount-code-input");
-    const paymentOptionItems = document.querySelectorAll(".option-item");
-
-    let productsData = []; // This variable stores the fetched products initially
-    let appliedDiscount = 0;
-    let shippingCost = 0;
-    let taxCost = 0;
-
-    const persianToAsciiDigits = (text) => {
-        const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-        const asciiDigits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        let result = "";
-        if (text === null || text === undefined) {
-            return "";
-        }
-        text = String(text);
-
-        for (let i = 0; i < text.length; i++) {
-            const char = text[i];
-            const persianIndex = persianDigits.indexOf(char);
-            if (persianIndex > -1) {
-                result += asciiDigits[persianIndex];
-            } else {
-                result += char;
-            }
-        }
-        return result;
-    };
-
-    // شبیه سازی دریافت محصولات
-    async function fetchProducts() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const data = [
-                    {
-                        id: 0, // ID محصول ویژه
-                        name: "اشتراک ویژه",
-                        description: "اشتراک یک ماهه",
-                        price: 400000,
-                        image: "./images/vip-card_2521013.png", // مسیر تصویر فرضی
-                    },
-                    // { // محصول معمولی برای تست حالت‌های دیگر
-                    //     id: 1,
-                    //     name: "محصول عادی ۱",
-                    //     description: "توضیحات محصول عادی",
-                    //     price: 150000,
-                    //     image: "./images/default-product.png", // مسیر تصویر فرضی
-                    // }
-                ];
-                resolve(data);
-                // reject(new Error("Failed to fetch products")); // uncomment to simulate error
-            }, 700);
-        });
-    }
-
-    // شبیه سازی دریافت کدهای تخفیف
-    async function fetchDiscountCodes() {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const data = [
-                    { code: "SALE10", amount: 50000 },
-                    { code: "ZARISFREE", amount: 19000 },
-                ];
-                resolve(data);
-            }, 400);
-        });
-    }
-
-    // شبیه سازی دریافت روزهای تحویل
-    async function fetchDeliveryDays() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const data = [
-                    { dayOfWeek: "شنبه", date: "۷ بهمن" },
-                    { dayOfWeek: "یکشنبه", date: "۸ بهمن" },
-                    { dayOfWeek: "دوشنبه", date: "۹ بهمن" },
-                ];
-                resolve(data);
-                // reject(new Error("Failed to fetch delivery days")); // uncomment to simulate error
-            }, 500);
-        });
-    }
-
-    // شبیه سازی دریافت آدرس کاربر
-    async function fetchUserAddress() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const addressData = {
-                    street: "خیابان انقلاب، کوچه دانشگاه",
-                    building: "پلاک ۱۲",
-                    unit: "واحد ۳",
-                    city: "تهران",
-                    postalCode: "۱۲۳۴۵۶۷۸۹۰",
-                    fullAddress: "تهران، خیابان انقلاب، کوچه دانشگاه، پلاک ۱۲، واحد ۳، کد پستی: ۱۲۳۴۵۶۷۸۹۰",
-                };
-                resolve(addressData);
-                // reject(new Error("Failed to fetch user address")); // uncomment to simulate error
-            }, 600);
-        });
-    }
-
-    // شبیه سازی دریافت هزینه ارسال
-    async function fetchShippingCost() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const cost = 19000;
-                // reject(new Error("Failed to fetch shipping cost")); // Uncomment to simulate error
-                resolve(cost);
-            }, 450);
-        });
-    }
-
-    // شبیه سازی دریافت هزینه مالیات
-    async function fetchTaxCost() {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const cost = 50000;
-                resolve(cost);
-            }, 350);
-        });
-    }
-
-    // تابع رندر کردن محصولات در صفحه
-    function renderProducts(productsToRender) {
-        loadingProductsEl.style.display = "none";
-        productErrorMessageEl.style.display = "none";
-        productListEl.innerHTML = ""; // پاک کردن محتوای قبلی
-
-        if (productsToRender && productsToRender.length > 0) {
-            productsToRender.forEach((product) => {
-                const isSpecialProduct = product.id === 0; // بررسی محصول ویژه بر اساس ID
-
-                // HTML بخش کنترل تعداد - اگر محصول ویژه باشد خالی می‌ماند
-                const quantityControlsHtml = isSpecialProduct ? '' : `
-                    <div class="d-flex align-items-center mt-2 product-quantity-controls col-md-2 col-sm-12">
-                        <button class="bg-transparent border-light-subtle rounded-circle px-1 py-1 fw-bold d-flex align-items-center justify-content-center plusBtn">
-                            <img src="./images/plus-svgrepo-com.svg" alt="" width="15" height="15">
-                        </button>
-                        <div class="d-inline mx-2"><span class="product-quantity">1</span></div> <span class="ms-2">مورد</span>
-                        <button class="bg-transparent border-light-subtle rounded-circle px-1 py-1 fw-bold d-flex align-items-center justify-content-center minusBtn">
-                            <img src="./images/minus-svgrepo-com.svg" alt="" width="15" height="15">
-                        </button>
-                    </div>
-                `;
-
-                const productHtml = `
-                    <div class="product-item card mb-2" data-product-id="${product.id}" ${isSpecialProduct ? 'data-special-product="true"' : ''}> <div class="card-body d-flex flex-wrap align-items-center p-3">
-                            <button type="button" class="btn-close ms-2 remove-product-btn col-md-1 col-sm-12" aria-label="حذف محصول" data-product-id="${product.id}"></button>
-                            <div class="d-flex align-items-center col-md-7 col-sm-12">
-                               <img src="${product.image}" alt="تصویر محصول" width="100" height="100" class="mx-2 rounded">
-                               <div>
-                                  <div class="title fw-bold">${product.name}</div>
-                                  <div class="description text-muted small">${product.description}</div>
-                               </div>
-                            </div>
-                            <div class="d-flex flex-column align-items-start mx-2 col-md-2 col-sm-12">
-                              <span class="product-price fw-bold">${new Intl.NumberFormat("fa-IR").format(product.price)} تومان</span>
-                            </div>
-                            ${quantityControlsHtml} </div>
-                    </div>
-                `;
-                productListEl.innerHTML += productHtml;
-            });
-
-            // افزودن شنونده‌ها به دکمه‌هایی که رندر شده‌اند
-            addQuantityControlListeners(); // فقط روی دکمه‌های موجود (محصولات غیر ویژه) اعمال می‌شود
-            addCloseButtonListeners();
-
-            // فراخوانی تابع جدید برای بررسی وضعیت کنترل‌ها بعد از رندر
-            checkOrderControlsState();
-
-        } else {
-             // اگر آرایه محصولات خالی بود
-             productListEl.innerHTML = "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
-             checkOrderControlsState(); // مدیریت وضعیت کنترل‌ها برای سبد خالی
-        }
-    }
-
-
-    // تابع بررسی وضعیت کنترل‌ها بر اساس محتوای سبد خرید
-    function checkOrderControlsState() {
-        const productItems = productListEl.querySelectorAll(".product-item");
-        const productCount = productItems.length;
-        const isSingleProduct = productCount === 1;
-        const firstProductId = isSingleProduct ? productItems[0].dataset.productId : null;
-        const isSingleSpecialProduct = isSingleProduct && firstProductId === '0'; // بررسی محصول ویژه بر اساس دیتا اتریبیوت و تعداد
-
-        // همیشه قیمت‌ها را به‌روزرسانی کنید
-        updatePrices();
-
-        // --- مدیریت فعال/غیرفعال بودن کنترل‌ها ---
-
-        // بخش کنترل تعداد (دکمه‌های + و -)
-        // این دکمه‌ها فقط برای محصولات غیر ویژه وجود دارند و فعال بودنشان بستگی به وجود محصولات دارد
-        productListEl.querySelectorAll(".product-quantity-controls button").forEach(btn => {
-             // این دکمه‌ها فقط زمانی باید فعال باشند که محصولی در سبد هست و آن محصول ویژه به تنهایی نیست
-             // چون برای محصول ویژه دکمه‌ای رندر نمی‌شود، کافیست در وضعیت کلی "محصولی نیست" غیرفعال شوند
-             btn.disabled = productCount === 0;
-        });
-
-
-        // فیلد کد تخفیف
-        if (discountCodeInputEl) {
-            // غیرفعال کردن اگر فقط محصول ویژه باشد یا هیچ محصولی نباشد
-            discountCodeInputEl.disabled = isSingleSpecialProduct || productCount === 0;
-            // اگر وضعیت به فقط محصول ویژه تغییر کرد و کد تخفیف اعمال شده بود، آن را پاک کنید
-            if (isSingleSpecialProduct && appliedDiscount > 0) {
-                 appliedDiscount = 0;
-                 discountCodeInputEl.value = ''; // پاک کردن فیلد ورودی
-                 updatePrices(); // به‌روزرسانی مجدد قیمت‌ها
-            } else if (productCount === 0 && appliedDiscount > 0) {
-                 // اگر سبد خالی شد، کد تخفیف را پاک کنید
-                 appliedDiscount = 0;
-                 discountCodeInputEl.value = '';
-                 updatePrices();
-            }
-        }
-
-
-        // روزهای تحویل
-        // این بخش فقط زمانی فعال است که محصول ویژه به تنهایی در سبد نباشد و محصولی وجود داشته باشد
-        const deliveryButtons = deliveryDaysContainerEl.querySelectorAll(".delivery-day");
-        deliveryButtons.forEach(btn => {
-            const shouldDisable = isSingleSpecialProduct || productCount === 0;
-            btn.disabled = shouldDisable;
-            if(shouldDisable) {
-                 btn.classList.add('disabled'); // اضافه کردن کلاس disabled برای استایل دهی
-            } else {
-                 btn.classList.remove('disabled');
-            }
-        });
-
-        // آدرس کاربر
-        // بخش آدرس اطلاعات نمایش می‌دهد و ورودی ندارد، پس نیازی به غیرفعال کردن خاص آن نیست.
-        // اگر دکمه یا ورودی در این بخش اضافه کردید، باید اینجا مدیریت شود.
-
-
-        // گزینه‌های پرداخت
-        // این بخش فقط زمانی فعال است که حداقل یک محصول (شامل محصول ویژه) در سبد باشد
-        paymentOptionItems.forEach((item) => {
-            if (productCount > 0) {
-                item.classList.remove("disabled");
-                item.style.pointerEvents = "auto"; // اطمینان از کار کردن کلیک
-            } else {
-                item.classList.add("disabled");
-                item.style.pointerEvents = "none";
-            }
-        });
-
-        // دکمه پرداخت
-        // تابع updatePrices قبلا منطق فعال کردن دکمه پرداخت را بر اساس قیمت نهایی مدیریت می‌کند
-        // و نیاز به تغییر در اینجا نیست. اگر محصول ویژه به تنهایی در سبد باشد و قیمتی داشته باشد،
-        // updatePrices دکمه پرداخت را فعال می‌کند (به شرطی که price > 0 باشد).
-
-
-        // --- مدیریت وضعیت سبد خالی ---
-        if (productCount === 0) {
-            // اگر هیچ محصولی وجود ندارد، وضعیت خالی را نمایش دهید
-            handleCriticalState("محصولی برای نمایش وجود ندارد.", false); // استفاده از پیام مناسب سبد خالی
-        } else {
-            // اگر محصولی وجود دارد، مطمئن شوید پیام‌های وضعیت بحرانی پنهان هستند
-            loadingProductsEl.style.display = "none"; // پیام بارگذاری محصولات
-            productErrorMessageEl.style.display = "none"; // پیام خطای بارگذاری محصولات
-            noProductMessageEl.style.display = "none"; // پیام "محصولی برای نمایش وجود ندارد"
-            deliveryDaysCardEl.style.display = "block"; // مطمئن شوید کارت روزهای تحویل نمایش داده می‌شود
-            // loadingDeliveryDaysEl وضعیت نمایشش توسط fetchDeliveryDays/renderDeliveryDays مدیریت می‌شود.
-        }
-    }
-
-
-    // تابع نمایش خطا در بارگذاری محصولات (کمتر استفاده می‌شود، checkOrderControlsState وضعیت خالی را بهتر مدیریت می‌کند)
-    // function displayProductFetchError() {
-    //     loadingProductsEl.style.display = "none";
-    //     productListEl.innerHTML = "";
-    //     productErrorMessageEl.style.display = "block";
-    //     checkOrderControlsState(); // برای اطمینان از غیرفعال شدن کنترل‌ها
-    // }
-
-
-    // تابع رندر کردن روزهای تحویل
-    function renderDeliveryDays(daysToRender) {
-        deliveryDaysContainerEl.innerHTML = "";
-        loadingDeliveryDaysEl.style.display = "none";
-
-        if (daysToRender && daysToRender.length > 0) {
-            const daysHtml = daysToRender
-                .map(
-                    (day) => `
-                    <button class="delivery-day my-2 bg-transparent border border-dark-subtle rounded-2 p-3">
-                        ${day.dayOfWeek} <br> ${day.date}
-                    </button>
-                `
-                )
-                .join("");
-            deliveryDaysContainerEl.innerHTML = daysHtml;
-            addDeliveryDayEventListeners(); // اضافه کردن شنونده‌ها
-            deliveryDaysContainerEl.style.display = "block";
-        } else {
-            deliveryDaysContainerEl.innerHTML =
-                "<div class='text-center py-3'>روز تحویلی در دسترس نیست.</div>";
-            deliveryDaysContainerEl.style.display = "block";
-            // checkOrderControlsState وضعیت غیرفعال بودن دکمه‌ها را اگر رندر شدند مدیریت می‌کند.
-        }
-    }
-
-    // تابع رندر کردن آدرس کاربر
-    function renderUserAddress(addressData) {
-        if (!userAddressContainerEl) {
-            console.error("User address container element not found!");
-            return;
-        }
-        userAddressContainerEl.innerHTML = ""; // پاک کردن محتوای قبلی
-
-        if (addressData && addressData.fullAddress) {
-            const addressHtml = `
-                <div class="fw-bold mb-2">آدرس تحویل:</div>
-                <p class="mb-0 text-muted small">
-                    ${addressData.fullAddress}
-                </p>
-                `;
-            userAddressContainerEl.innerHTML = addressHtml;
-        } else {
-             userAddressContainerEl.innerHTML = `
-                <div class="fw-bold mb-2">آدرس تحویل:</div>
-                <p class="mb-0 text-muted small">
-                    آدرسی ثبت نشده است. لطفا در پروفایل کاربری خود آدرس را وارد کنید.
-                </p>
-                <a href="#" class="btn btn-sm btn-outline-secondary mt-2">ثبت آدرس</a>
-            `;
-        }
-         // در حال حاضر بخش آدرس دکمه/ورودی تعاملی ندارد که نیاز به فعال/غیرفعال کردن داشته باشد.
-         // اگر اضافه شد، باید در checkOrderControlsState مدیریت شود.
-    }
-
-    // تابع به‌روزرسانی نمایش قیمت‌ها
-    function updatePrices() {
-        const productItems = productListEl.querySelectorAll(".product-item");
-        let calculatedProductTotalPrice = 0;
-
-        productItems.forEach((item) => {
-            const quantitySpan = item.querySelector(".product-quantity"); // این ممکن است برای محصول ویژه وجود نداشته باشد
-            const priceSpan = item.querySelector(".product-price");
-            const isSpecial = item.dataset.specialProduct === 'true'; // بررسی اینکه محصول ویژه است
-
-            if (priceSpan) {
-                const priceText = priceSpan.textContent;
-                const textWithAsciiDigits = persianToAsciiDigits(priceText);
-                const cleanedPriceText = textWithAsciiDigits.replace(/\D/g, "");
-                const price = parseInt(cleanedPriceText, 10);
-
-                if (!isNaN(price)) {
-                    // اگر محصول ویژه است، تعداد آن ۱ فرض می‌شود
-                    const quantity = isSpecial ? 1 : (quantitySpan ? parseInt(quantitySpan.textContent, 10) : 0);
-                    if (!isNaN(quantity)) {
-                         calculatedProductTotalPrice += price * quantity;
-                    } else if (!isSpecial) {
-                         // اگر محصول معمولی بود اما quantitySpan پیدا نشد یا نامعتبر بود
-                         console.warn(`Could not parse quantity for regular item.`);
-                    }
-                } else {
-                    console.warn(`Could not parse price for item.`);
-                }
-            } else {
-                console.warn(`Price span not found for item.`);
-            }
-        });
-
-
-        // نمایش قیمت‌ها در المان‌های مربوطه
-        if (orderTotalPriceEl) {
-          orderTotalPriceEl.textContent =
-            new Intl.NumberFormat("fa-IR").format(calculatedProductTotalPrice) + " تومان";
-        } else { console.error("Element with id 'order-total-price' not found!"); }
-
-        if (orderShippingCostEl) {
-          orderShippingCostEl.textContent =
-            new Intl.NumberFormat("fa-IR").format(shippingCost) + " تومان";
-        } else { console.error("Element with id 'order-shipping-cost' not found!"); }
-
-
-        if (orderTaxCostEl) {
-          orderTaxCostEl.textContent =
-            new Intl.NumberFormat("fa-IR").format(taxCost) + " تومان";
-        } else { console.error("Element with id 'order-tax-cost' not found!"); }
-
-        if (orderDiscountEl) {
-          orderDiscountEl.textContent =
-            new Intl.NumberFormat("fa-IR").format(appliedDiscount) + " تومان";
-        } else { console.error("Element with id 'order-discount' not found!"); }
-
-        const subtotal = calculatedProductTotalPrice + shippingCost + taxCost;
-        let finalPrice = subtotal - appliedDiscount;
-
-        // قیمت نهایی نباید منفی شود
-        if (finalPrice < 0) {
-          finalPrice = 0;
-        }
-
-        if (orderFinalPriceEl) {
-          orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(finalPrice);
-        } else { console.error("Element with id 'order-final-price' not found!"); }
-
-        // فعال یا غیرفعال کردن دکمه پرداخت بر اساس وجود محصول و قیمت نهایی مثبت
-        // توجه: فعال/غیرفعال کردن کلی توسط checkOrderControlsState هم اعمال می‌شود
-        if (productItems.length > 0 && finalPrice > 0) {
-          if (payButton) {
-            payButton.classList.remove("disabled");
-            payButton.style.pointerEvents = "auto"; // فعال کردن کلیک
-          }
-        } else {
-          if (payButton) {
-            payButton.classList.add("disabled");
-            payButton.style.pointerEvents = "none"; // غیرفعال کردن کلیک
-          }
-        }
-    }
-
-    // تابع کلی برای فعال کردن کنترل‌های سفارش (برای حالت پیش‌فرض یا وقتی محصول ویژه تنها نیست)
-    function enableOrderControls() {
-        const plusBtns = productListEl.querySelectorAll(".plusBtn");
-        const minusBtns = productListEl.querySelectorAll(".minusBtn");
-        plusBtns.forEach((btn) => (btn.disabled = false));
-        minusBtns.forEach((btn) => (btn.disabled = false));
-
-        if (discountCodeInputEl) discountCodeInputEl.disabled = false;
-
-        if (payButton) {
-            // دکمه پرداخت توسط updatePrices فعال/غیرفعال می‌شود
-             // payButton.classList.remove("disabled");
-             // payButton.style.pointerEvents = "auto";
-        }
-
-        paymentOptionItems.forEach((item) => {
-             item.classList.remove("disabled");
-             item.style.pointerEvents = "auto";
-        });
-
-        const deliveryButtons = deliveryDaysContainerEl.querySelectorAll(".delivery-day");
-         deliveryButtons.forEach(btn => {
-             btn.disabled = false;
-             btn.classList.remove('disabled');
-         });
-    }
-
-    // تابع کلی برای غیرفعال کردن تمام کنترل‌های سفارش (برای وضعیت خالی یا خطا)
-    function disableOrderControls() {
-        const plusBtns = productListEl.querySelectorAll(".plusBtn");
-        const minusBtns = productListEl.querySelectorAll(".minusBtn");
-        plusBtns.forEach((btn) => (btn.disabled = true));
-        minusBtns.forEach((btn) => (btn.disabled = true));
-
-        if (discountCodeInputEl) discountCodeInputEl.disabled = true;
-
-        if (payButton) {
-            payButton.classList.add("disabled");
-            payButton.style.pointerEvents = "none";
-        }
-
-        paymentOptionItems.forEach((item) => {
-            item.classList.add("disabled");
-            item.style.pointerEvents = "none";
-        });
-
-        const deliveryButtons = deliveryDaysContainerEl.querySelectorAll(".delivery-day");
-         deliveryButtons.forEach(btn => {
-             btn.disabled = true;
-             btn.classList.add('disabled');
-         });
-
-    }
-
-    // تابع مدیریت وضعیت‌های بحرانی (خطا در بارگذاری اولیه یا سبد کاملا خالی)
-    function handleCriticalState(errorMessage = "محصولی برای نمایش وجود ندارد.", isError = true) {
-        // اطمینان از صفر بودن قیمت‌ها و تخفیف در این وضعیت
-        appliedDiscount = 0;
-        shippingCost = 0;
-        taxCost = 0;
-        updatePrices(); // به‌روزرسانی نمایش قیمت‌ها به صفر
-
-        loadingProductsEl.style.display = "none"; // پنهان کردن پیام بارگذاری محصولات
-
-        // نمایش پیام مناسب (خطا یا سبد خالی)
-        if (isError) {
-             productListEl.innerHTML = `<div class='text-center py-5 text-danger' id="product-error-message">${errorMessage}</div>`;
-             productErrorMessageEl.style.display = "block";
-        } else {
-             // نمایش تصویر و پیام سبد خالی
-             productListEl.innerHTML = `
-                 <img src="./images/empty-cart.svg" alt="سبد خرید خالی" width="500" height="250" class="d-flex mx-auto img-fluid">
-                 <div class='text-center fs-2 py-5' id="no-product-message">${errorMessage}</div>
-                 `;
-             noProductMessageEl.style.display = "block";
-             productErrorMessageEl.style.display = "none"; // اطمینان از پنهان بودن پیام خطا
-
-        }
-
-
-        // پنهان کردن یا غیرفعال کردن بخش‌های مربوط به ادامه فرآیند خرید
-        deliveryDaysCardEl.style.display = "block"; // کارت روزهای تحویل نمایش داده شود (حتی خالی)
-        loadingDeliveryDaysEl.style.display = "none"; // پیام بارگذاری روزها پنهان باشد
-        deliveryDaysContainerEl.innerHTML = ""; // محتوای روزها پاک شود
-        deliveryDaysContainerEl.style.display = "block"; // کانتینر نمایش داده شود (حتی خالی)
-
-        // غیرفعال کردن تمام کنترل‌ها
-        disableOrderControls();
-    }
-
-    // اضافه کردن شنونده برای گزینه‌های پرداخت
-    optionItems.forEach((item) => {
-        item.addEventListener("click", function () {
-            // فقط در صورتی واکنش نشان دهید که غیرفعال نباشد
-            if (!this.classList.contains("disabled")) {
-                optionItems.forEach((opt) => {
-                    opt.style.backgroundColor = "";
-                    opt.classList.remove("border-primary");
-                    opt.classList.add("border-dark-subtle");
-                });
-                this.style.backgroundColor = "#3B82F6"; // رنگ آبی برای انتخاب شده
-                this.classList.add("border-primary");
-                this.classList.remove("border-dark-subtle");
-            }
-        });
-    });
-
-    // انتخاب گزینه اول پرداخت در ابتدا
-    if (optionItems.length > 0) {
-        optionItems[0].style.backgroundColor = "#3B82F6";
-        optionItems[0].classList.add("border-primary");
-        optionItems[0].classList.remove("border-dark-subtle");
-    }
-
-    // تابع اضافه کردن شنونده برای دکمه‌های انتخاب روز تحویل
-    function addDeliveryDayEventListeners() {
-        const deliveryButtons = document.querySelectorAll(".delivery-day");
-        deliveryButtons.forEach((button) => {
-            button.addEventListener("click", () => {
-                // فقط در صورتی واکنش نشان دهید که دکمه غیرفعال نباشد
-                if (!button.disabled) {
-                    deliveryButtons.forEach((btn) => {
-                        btn.classList.remove("bg-primary", "text-white", "border-0");
-                        btn.classList.add("bg-transparent", "border", "border-dark-subtle");
-                    });
-
-                    button.classList.remove("bg-transparent", "border-dark-subtle");
-                    button.classList.add("bg-primary", "text-white", "border-0");
-                }
-            });
-        });
-    }
-
-    // تابع اضافه کردن شنونده برای دکمه‌های کنترل تعداد
-    function addQuantityControlListeners() {
-        const plusBtns = productListEl.querySelectorAll(".plusBtn");
-        const minusBtns = productListEl.querySelectorAll(".minusBtn");
-
-        plusBtns.forEach((button) => {
-            button.addEventListener("click", (event) => {
-                 // پیدا کردن نزدیک‌ترین کنترل تعداد و سپس span تعداد
-                const quantityControls = event.target.closest(".product-quantity-controls");
-                if (!quantityControls) return; // اگر پیدا نشد کاری نکن
-
-                const quantitySpan = quantityControls.querySelector(".product-quantity");
-                if (!quantitySpan) return; // اگر پیدا نشد کاری نکن
-
-                let currentQuantity = parseInt(quantitySpan.textContent, 10);
-                 if (!isNaN(currentQuantity)) {
-                    currentQuantity++;
-                    quantitySpan.textContent = currentQuantity;
-                    updatePrices(); // به‌روزرسانی قیمت‌ها بعد از تغییر تعداد
-                 }
-            });
-        });
-
-        minusBtns.forEach((button) => {
-            button.addEventListener("click", (event) => {
-                const quantityControls = event.target.closest(".product-quantity-controls");
-                if (!quantityControls) return; // اگر پیدا نشد کاری نکن
-
-                const quantitySpan = quantityControls.querySelector(".product-quantity");
-                if (!quantitySpan) return; // اگر پیدا نشد کاری نکن
-
-                let currentQuantity = parseInt(quantitySpan.textContent, 10);
-                if (!isNaN(currentQuantity) && currentQuantity > 1) {
-                    currentQuantity--;
-                    quantitySpan.textContent = currentQuantity;
-                    updatePrices(); // به‌روزرسانی قیمت‌ها بعد از تغییر تعداد
-                }
-            });
-        });
-    }
-
-    // تابع اضافه کردن شنونده برای دکمه‌های حذف محصول
-    function addCloseButtonListeners() {
-        const removeButtons = productListEl.querySelectorAll(".remove-product-btn");
-
-        removeButtons.forEach((button) => {
-            button.addEventListener("click", (event) => {
-                const productIdToRemove = event.target.dataset.productId;
-                const productItemEl = productListEl.querySelector(
-                    `.product-item[data-product-id="${productIdToRemove}"]`
-                );
-
-                if (productItemEl) {
-                    productItemEl.remove();
-                    // بعد از حذف محصول، وضعیت کنترل‌ها و قیمت‌ها را به‌روز کنید
-                    checkOrderControlsState();
-                }
-            });
-        });
-    }
-
-    // اضافه کردن شنونده برای فیلد کد تخفیف
-    if (discountCodeInputEl) {
-        discountCodeInputEl.addEventListener("change", async (event) => {
-            // فقط در صورتی اقدام کند که فیلد غیرفعال نباشد
-            if (discountCodeInputEl.disabled) return;
-
-            const enteredCode = event.target.value.trim();
-            appliedDiscount = 0; // مقدار تخفیف را ریست کنید
-
-            if (enteredCode) {
-                try {
-                    const availableCodes = await fetchDiscountCodes(); // دریافت کدهای تخفیف معتبر
-                    const validCode = availableCodes.find(
-                        (code) => code.code.toUpperCase() === enteredCode.toUpperCase()
-                    );
-
-                    if (validCode) {
-                        appliedDiscount = validCode.amount; // اعمال مقدار تخفیف
-                    } else {
-                        // اگر کد معتبر نبود، تخفیف صفر باقی می‌ماند
-                        appliedDiscount = 0;
-                    }
-                } catch (error) {
-                    console.error("Error fetching or applying discount code:", error);
-                    appliedDiscount = 0; // در صورت خطا، تخفیف اعمال نشود
-                }
-            } else {
-                appliedDiscount = 0; // اگر فیلد خالی شد، تخفیف صفر شود
-            }
-
-            updatePrices(); // به‌روزرسانی قیمت‌ها پس از اعمال/حذف تخفیف
-        });
+const productListEl = document.getElementById("product-list");
+const loadingProductsEl = document.getElementById("loading-products");
+const productErrorMessageEl = document.getElementById("product-error-message");
+const orderTotalPriceEl = document.getElementById("order-total-price");
+const orderShippingCostEl = document.getElementById("order-shipping-cost");
+const orderTaxCostEl = document.getElementById("order-tax-cost");
+const orderDiscountEl = document.getElementById("order-discount");
+const orderFinalPriceEl = document.getElementById("order-final-price");
+const deliveryDaysCardEl = document.getElementById("delivery-days-card");
+const deliveryDaysContainerEl = document.getElementById("delivery-days-container");
+const loadingDeliveryDaysEl = document.getElementById("loading-delivery-days");
+const noProductMessageEl = document.getElementById("no-product-message");
+const payButton = document.getElementById("pay-button");
+const productCardBody = document.querySelector(".col-md-9 .card-body");
+const userAddressContainerEl = document.getElementById("user-address-container");
+const discountCodeInputEl = document.getElementById("discount-code-input");
+const paymentOptionItems = document.querySelectorAll(".option-item");
+let productsData = \[];
+let appliedDiscount = 0;
+let shippingCost = 0;
+let taxCost = 0;
+
+const persianToAsciiDigits = (text) => {
+const persianDigits = \["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+const asciiDigits = \["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+let result = "";
+if (text === null || text === undefined) {
+return "";
+}
+text = String(text);
+
+```
+for (let i = 0; i < text.length; i++) {
+  const char = text[i];
+  const persianIndex = persianDigits.indexOf(char);
+  if (persianIndex > -1) {
+    result += asciiDigits[persianIndex];
+  } else {
+    result += char;
+  }
+}
+return result;
+```
+
+};
+
+async function fetchProducts() {
+return new Promise((resolve, reject) => {
+// Added reject
+setTimeout(() => {
+const data = \[
+{
+id: 0,
+name: "اشتراک ویژه",
+description: "اشتراک یک ماهه",
+price: 400000,
+image:
+"./images/vip-card\_2521013.png",
+},
+];
+resolve(data);
+}, 700);
+});
+}
+
+async function fetchDiscountCodes() {
+return new Promise((resolve) => {
+setTimeout(() => {
+const data = \[
+{ code: "SALE10", amount: 500000 },
+{ code: "ZARISFREE", amount: 19000 },
+];
+resolve(data);
+}, 400);
+});
+}
+
+async function fetchDeliveryDays() {
+return new Promise((resolve, reject) => {
+// Added reject
+setTimeout(() => {
+const data = \[
+{ dayOfWeek: "شنبه", date: "۷ بهمن" },
+{ dayOfWeek: "یکشنبه", date: "۸ بهمن" },
+{ dayOfWeek: "دوشنبه", date: "۹ بهمن" },
+];
+resolve(data);
+}, 500);
+});
+}
+
+async function fetchUserAddress() {
+return new Promise((resolve, reject) => {
+// Added reject
+setTimeout(() => {
+const addressData = {
+street: "خیابان انقلاب، کوچه دانشگاه",
+building: "پلاک ۱۲",
+unit: "واحد ۳",
+city: "تهران",
+postalCode: "۱۲۳۴۵۶۷۸۹۰",
+fullAddress:
+"تهران، خیابان انقلاب، کوچه دانشگاه، پلاک ۱۲، واحد ۳، کد پستی: ۱۲۳۴۵۶۷۸۹۰",
+};
+resolve(addressData);
+}, 600);
+});
+}
+
+async function fetchShippingCost() {
+
+```
+return new Promise((resolve, reject) => {
+  setTimeout(() => {
+    const cost = 19000;
+    // reject(new Error("Failed to fetch shipping cost")); // Uncomment to simulate error
+    resolve(cost);
+  }, 450);
+});
+```
+
+}
+
+async function fetchTaxCost() {
+return new Promise((resolve, reject) => {
+setTimeout(() => {
+const cost = 50000;
+resolve(cost);
+}, 350);
+});
+}
+
+function renderProducts(productsToRender) {
+loadingProductsEl.style.display = "none";
+productErrorMessageEl.style.display = "none";
+
+```
+if (productsToRender && productsToRender.length > 0) {
+  productListEl.innerHTML = ""; 
+  productsToRender.forEach((product) => {
+    const productHtml = `
+          <div class="product-item card mb-2" data-product-id="${
+            product.id
+          }">
+            <div class="card-body d-flex flex-wrap align-items-center p-3">
+            <button type="button" class="btn-close ms-2 remove-product-btn col-md-1 col-sm-12" aria-label="حذف محصول" data-product-id="${
+              product.id
+            }"></button>
+              <div class="d-flex align-items-center col-md-7  col-sm-12">
+                 <img src="${
+                   product.image
+                 }" alt="تصویر محصول" width="100" height="100" class="mx-2 rounded">
+                 <div>
+                    <div class="title fw-bold">${product.name}</div>
+                    <div class="description text-muted small">${
+                      product.description
+                    }</div>
+                 </div>
+              </div>
+              <div class="d-flex flex-column align-items-start mx-2 col-md-2  col-sm-12">
+                <span class="product-price fw-bold">${new Intl.NumberFormat(
+                  "fa-IR"
+                ).format(product.price)} تومان</span>
+              </div>
+              <div class="d-flex align-items-center mt-2 product-quantity-controls col-md-2  col-sm-12">
+              <button class="bg-transparent border-light-subtle  rounded-circle px-1 py-1 fw-bold d-flex align-items-center justify-content-center plusBtn">
+                  <img src="./images/plus-svgrepo-com.svg" alt="" width="15" height="15">
+              </button>
+              <div class="d-inline mx-2"><span class="product-quantity">1</span></div> <span class="ms-2">مورد</span>
+              <button class="bg-transparent border-light-subtle rounded-circle px-1 py-1 fw-bold d-flex align-items-center justify-content-center minusBtn">
+                  <img src="./images/minus-svgrepo-com.svg" alt="" width="15" height="15">
+              </button>
+              </div>
+            </div>
+          </div>
+        `;
+    productListEl.innerHTML += productHtml; 
+  });
+
+  addQuantityControlListeners();
+  addCloseButtonListeners();
+  enableOrderControls(); 
+} else {
+  productListEl.innerHTML =
+    "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
+}
+```
+
+}
+
+function displayProductFetchError() {
+loadingProductsEl.style.display = "none";
+productListEl.innerHTML = "";
+productErrorMessageEl.style.display = "block";
+}
+
+function renderDeliveryDays(daysToRender) {
+deliveryDaysContainerEl.innerHTML = "";
+loadingDeliveryDaysEl.style.display = "none";
+
+```
+if (daysToRender && daysToRender.length > 0) {
+  const daysHtml = daysToRender
+    .map(
+      (day) => `
+        <button class="delivery-day my-2 bg-transparent border border-dark-subtle rounded-2 p-3">
+          ${day.dayOfWeek} <br> ${day.date}
+        </button>
+      `
+    )
+    .join("");
+  deliveryDaysContainerEl.innerHTML = daysHtml;
+  addDeliveryDayEventListeners();
+  deliveryDaysContainerEl.style.display = "block"; 
+} else {
+  deliveryDaysContainerEl.innerHTML =
+    "<div class='text-center py-3'>روز تحویلی در دسترس نیست.</div>";
+  deliveryDaysContainerEl.style.display = "block"; 
+}
+```
+
+}
+
+function renderUserAddress(addressData) {
+if (!userAddressContainerEl) {
+console.error("User address container element not found!");
+return;
+}
+userAddressContainerEl.innerHTML = "";
+
+```
+if (addressData && addressData.fullAddress) {
+    const addressHtml = `
+        <div class="fw-bold mb-2">آدرس تحویل:</div>
+        <p class="mb-0 text-muted small">
+            ${addressData.fullAddress}
+        </p>
+        `;
+    userAddressContainerEl.innerHTML = addressHtml;
+} else {
+     userAddressContainerEl.innerHTML = `
+        <div class="fw-bold mb-2">آدرس تحویل:</div>
+        <p class="mb-0 text-muted small">
+            آدرسی ثبت نشده است. لطفا در پروفایل کاربری خود آدرس را وارد کنید.
+        </p>
+        <a href="#" class="btn btn-sm btn-outline-secondary mt-2">ثبت آدرس</a>
+    `;
+}
+```
+
+}
+
+function updatePrices() {
+const productItems = productListEl.querySelectorAll(".product-item");
+let calculatedProductTotalPrice = 0;
+
+```
+productItems.forEach((item) => {
+  const quantitySpan = item.querySelector(".product-quantity");
+  const priceSpan = item.querySelector(".product-price");
+
+  if (quantitySpan && priceSpan) {
+    const quantity = parseInt(quantitySpan.textContent, 10);
+    const priceText = priceSpan.textContent;
+    const textWithAsciiDigits = persianToAsciiDigits(priceText);
+    const cleanedPriceText = textWithAsciiDigits.replace(/\D/g, "");
+    const price = parseInt(cleanedPriceText, 10);
+
+    if (!isNaN(quantity) && !isNaN(price)) {
+      calculatedProductTotalPrice += price * quantity;
     } else {
-        console.error(
-            "Discount code input element with id 'discount-code-input' not found!"
-        );
+      console.warn(`Could not parse quantity or price for item.`);
     }
+  } else {
+    console.warn(`Quantity or price span not found for item.`);
+  }
+});
 
-    // تابع اصلی برای راه‌اندازی صفحه
-    async function initializePage() {
-        // وضعیت اولیه: همه چیز غیرفعال و در حال بارگذاری
-        disableOrderControls(); // غیرفعال کردن تمام کنترل‌ها در ابتدا
+
+if (orderTotalPriceEl) {
+  orderTotalPriceEl.textContent =
+    new Intl.NumberFormat("fa-IR").format(calculatedProductTotalPrice) +
+    " تومان";
+} else {
+  console.error("Element with id 'order-total-price' not found!");
+}
+
+if (orderShippingCostEl) {
+  orderShippingCostEl.textContent =
+    new Intl.NumberFormat("fa-IR").format(shippingCost) + " تومان";
+} else {
+  console.error("Element with id 'order-shipping-cost' not found!");
+}
+
+if (orderTaxCostEl) {
+  orderTaxCostEl.textContent =
+    new Intl.NumberFormat("fa-IR").format(taxCost) + " تومان";
+} else {
+  console.error("Element with id 'order-tax-cost' not found!");
+}
+
+if (orderDiscountEl) {
+  orderDiscountEl.textContent =
+    new Intl.NumberFormat("fa-IR").format(appliedDiscount) + " تومان";
+} else {
+  console.error("Element with id 'order-discount' not found!");
+}
+
+const subtotal = calculatedProductTotalPrice + shippingCost + taxCost;
+
+
+let finalPrice = subtotal - appliedDiscount;
+if (finalPrice < 0) {
+  finalPrice = 0;
+}
+
+if (orderFinalPriceEl) {
+  orderFinalPriceEl.textContent = new Intl.NumberFormat("fa-IR").format(
+    finalPrice
+  );
+} else {
+  console.error("Element with id 'order-final-price' not found!");
+}
+
+if (productItems.length > 0 && finalPrice > 0) {
+  if (payButton) {
+    payButton.classList.remove("disabled");
+    payButton.style.pointerEvents = "auto";
+  }
+} else {
+
+  if (payButton) {
+    payButton.classList.add("disabled");
+    payButton.style.pointerEvents = "none";
+  }
+}
+```
+
+}
+
+function enableOrderControls() {
+const plusBtns = productListEl.querySelectorAll(".plusBtn");
+const minusBtns = productListEl.querySelectorAll(".minusBtn");
+plusBtns.forEach((btn) => (btn.disabled = false));
+minusBtns.forEach((btn) => (btn.disabled = false));
+if (discountCodeInputEl) discountCodeInputEl.disabled = false;
+if (payButton) {
+payButton.classList.remove("disabled");
+payButton.style.pointerEvents = "auto";
+}
+paymentOptionItems.forEach((item) => item.classList.remove("disabled"));
+}
+
+function disableOrderControls() {
+const plusBtns = productListEl.querySelectorAll(".plusBtn");
+const minusBtns = productListEl.querySelectorAll(".minusBtn");
+plusBtns.forEach((btn) => (btn.disabled = true));
+minusBtns.forEach((btn) => (btn.disabled = true));
+if (discountCodeInputEl) discountCodeInputEl.disabled = true;
+if (payButton) {
+payButton.classList.add("disabled");
+payButton.style.pointerEvents = "none";
+}
+paymentOptionItems.forEach((item) => item.classList.add("disabled"));
+}
+
+function handleCriticalState(
+errorMessage = "محصولی برای نمایش وجود ندارد.",
+isError = true
+) {
+
+```
+appliedDiscount = 0;
+shippingCost = 0;
+taxCost = 0;
+
+
+updatePrices();
+
+
+loadingProductsEl.style.display = "none";
+productListEl.innerHTML = `
+<img src="./images/empty-cart.svg" alt="" width="500" height="250" class="d-flex mx-auto img-fluid">
+<div class="text-center fs-2 py-5  text-danger" id="product-error-message">خطا در بارگذاری محصولات. لطفا مجدداً تلاش کنید.</div>`;
+if (isError) {
+  productErrorMessageEl.style.display = "block"; 
+} else {
+  productErrorMessageEl.style.display = "none";
+  productListEl.innerHTML = `<div class='text-center py-5'>${errorMessage}</div>`;
+}
+deliveryDaysCardEl.style.display = "block";
+noProductMessageEl.style.display = "block"; 
+loadingDeliveryDaysEl.style.display = "none"; 
+deliveryDaysContainerEl.innerHTML = ""; 
+deliveryDaysContainerEl.style.display = "none"; 
+
+disableOrderControls(); 
+```
+
+}
+
+const optionItems = document.querySelectorAll(".option-item");
+optionItems.forEach((item) => {
+item.addEventListener("click", function () {
+// Only react if not disabled
+if (!this.classList.contains("disabled")) {
+optionItems.forEach((opt) => {
+opt.style.backgroundColor = "";
+opt.classList.remove("border-primary");
+opt.classList.add("border-dark-subtle");
+});
+this.style.backgroundColor = "#3B82F6";
+this.classList.add("border-primary");
+this.classList.remove("border-dark-subtle");
+}
+});
+});
+
+if (optionItems.length > 0) {
+optionItems\[0].style.backgroundColor = "#3B82F6";
+optionItems\[0].classList.add("border-primary");
+optionItems\[0].classList.remove("border-dark-subtle");
+}
+
+function addDeliveryDayEventListeners() {
+const deliveryButtons = document.querySelectorAll(".delivery-day");
+deliveryButtons.forEach((button) => {
+button.addEventListener("click", () => {
+deliveryButtons.forEach((btn) => {
+btn.classList.remove("bg-primary", "text-white", "border-0");
+btn.classList.add("bg-transparent", "border", "border-dark-subtle");
+});
+
+```
+    button.classList.remove("bg-transparent", "border-dark-subtle");
+    button.classList.add("bg-primary", "text-white", "border-0");
+  });
+});
+```
+
+}
+
+function addQuantityControlListeners() {
+
+```
+const plusBtns = productListEl.querySelectorAll(".plusBtn");
+const minusBtns = productListEl.querySelectorAll(".minusBtn");
+
+plusBtns.forEach((button) => {
+  button.addEventListener("click", (event) => {
+    const quantitySpan = event.target
+      .closest(".product-quantity-controls")
+      .querySelector(".product-quantity");
+    if (!quantitySpan) return;
+    let currentQuantity = parseInt(quantitySpan.textContent, 10);
+    currentQuantity++;
+    quantitySpan.textContent = currentQuantity;
+    updatePrices();
+  });
+});
+
+minusBtns.forEach((button) => {
+  button.addEventListener("click", (event) => {
+    const quantitySpan = event.target
+      .closest(".product-quantity-controls")
+      .querySelector(".product-quantity");
+    if (!quantitySpan) return;
+    let currentQuantity = parseInt(quantitySpan.textContent, 10);
+    if (currentQuantity > 1) {
+      currentQuantity--;
+      quantitySpan.textContent = currentQuantity;
+      updatePrices();
+    }
+  });
+});
+```
+
+}
+
+function addCloseButtonListeners() {
+const removeButtons = productListEl.querySelectorAll(".remove-product-btn");
+
+```
+removeButtons.forEach((button) => {
+  button.addEventListener("click", (event) => {
+    const productIdToRemove = event.target.dataset.productId;
+    const productItemEl = productListEl.querySelector(
+      `.product-item[data-product-id="${productIdToRemove}"]`
+    );
+
+    if (productItemEl) {
+      productItemEl.remove();
+      updatePrices();
+      if (productListEl.querySelectorAll(".product-item").length === 0) {
+        handleCriticalState("محصولی برای نمایش وجود ندارد.");
+      }
+    }
+  });
+});
+```
+
+}
+
+if (discountCodeInputEl) {
+discountCodeInputEl.addEventListener("change", async (event) => {
+if (discountCodeInputEl.disabled) return;
+
+```
+  const enteredCode = event.target.value.trim();
+  appliedDiscount = 0;
+
+  if (enteredCode) {
+    try {
+      const availableCodes = await fetchDiscountCodes();
+      const validCode = availableCodes.find(
+        (code) => code.code.toUpperCase() === enteredCode.toUpperCase()
+      );
+
+      if (validCode) {
+        appliedDiscount = validCode.amount;
+      } else {
         appliedDiscount = 0;
-        shippingCost = 0;
-        taxCost = 0;
-        updatePrices(); // به‌روزرسانی قیمت‌ها (صفر)
-
-        // نمایش اولیه بخش روزهای تحویل با پیام بارگذاری
-        deliveryDaysCardEl.style.display = "block";
-        noProductMessageEl.style.display = "block"; // موقتاً پیام "محصولی نیست" نمایش داده شود
-        loadingDeliveryDaysEl.style.display = "block";
-
-        // نمایش پیام بارگذاری آدرس
-        if(userAddressContainerEl) {
-             userAddressContainerEl.innerHTML = `             <div class="text-center py-3">در حال بارگذاری آدرس...</div>
-               `;
-        } else {
-            console.error("User address container element not found!");
-        }
-
-
-        try {
-            productsData = await fetchProducts(); // دریافت محصولات
-
-            if (productsData && productsData.length > 0) {
-                renderProducts(productsData); // رندر محصولات و فراخوانی checkOrderControlsState
-
-                // دریافت و رندر روزهای تحویل و آدرس همزمان
-                try {
-                    const [deliveryDays, userAddress] = await Promise.all([
-                        fetchDeliveryDays(),
-                        fetchUserAddress()
-                    ]);
-                    renderDeliveryDays(deliveryDays); // رندر روزها و اضافه کردن شنونده‌ها
-                    renderUserAddress(userAddress); // رندر آدرس
-                    loadingDeliveryDaysEl.style.display = "none"; // پنهان کردن پیام بارگذاری روزها
-                    noProductMessageEl.style.display = "none"; // پنهان کردن پیام "محصولی نیست" اگر محصولی بارگذاری شد
-
-                } catch (fetchOtherDataError) {
-                    console.error("Could not fetch delivery days or user address:", fetchOtherDataError);
-                    renderDeliveryDays([]); // رندر خالی در صورت خطا
-                    renderUserAddress(null); // رندر خالی در صورت خطا
-                    loadingDeliveryDaysEl.style.display = "none"; // پنهان کردن پیام بارگذاری
-                    // checkOrderControlsState وضعیت کنترل‌ها را بر اساس محصولات موجود تنظیم می‌کند
-                }
-
-                // دریافت هزینه‌های ارسال و مالیات همزمان
-                try {
-                    const [fetchedShipping, fetchedTax] = await Promise.all([
-                        fetchShippingCost(),
-                        fetchTaxCost()
-                    ]);
-                    shippingCost = fetchedShipping;
-                    taxCost = fetchedTax;
-                } catch (costError) {
-                    console.error("Could not fetch shipping or tax costs:", costError);
-                    shippingCost = 0; // در صورت خطا صفر در نظر گرفته شود
-                    taxCost = 0; // در صورت خطا صفر در نظر گرفته شود
-                }
-
-                 // updatePrices توسط checkOrderControlsState که توسط renderProducts فراخوانی می‌شود، انجام می‌شود.
-
-            } else {
-                // اگر fetchProducts آرایه خالی برگرداند
-                console.warn("No products returned from fetchProducts.");
-                handleCriticalState("محصولی برای نمایش وجود ندارد.", false); // نمایش وضعیت سبد خالی
-                // disableOrderControls قبلا فراخوانی شده است و checkOrderControlsState هم در handleCriticalState فراخوانی می‌شود.
-            }
-
-        } catch (error) {
-            // در صورت بروز خطا در fetchProducts
-            console.error(
-                "Critical error during page initialization (e.g., product fetch failed):",
-                error
-            );
-
-            // نمایش پیام خطا و مدیریت وضعیت بحرانی
-             handleCriticalState("خطا در بارگذاری محصولات. لطفا مجددا تلاش کنید.", true);
-            // disableOrderControls قبلا فراخوانی شده است و checkOrderControlsState هم در handleCriticalState فراخوانی می‌شود.
-        }
+      }
+    } catch (error) {
+      console.error("Error fetching or applying discount code:", error);
+      appliedDiscount = 0;
     }
+  } else {
+    appliedDiscount = 0;
+  }
 
-    // فراخوانی تابع initializePage هنگام بارگذاری کامل DOM
-    initializePage();
+  updatePrices();
+});
+```
+
+} else {
+console.error(
+"Discount code input element with id 'discount-code-input' not found!"
+);
+}
+
+async function initializePage() {
+disableOrderControls();
+appliedDiscount = 0;
+shippingCost = 0;
+taxCost = 0;
+updatePrices();
+
+deliveryDaysCardEl.style.display = "none";
+noProductMessageEl.style.display = "block";
+loadingDeliveryDaysEl.style.display = "block";
+
+if(userAddressContainerEl) {
+userAddressContainerEl.innerHTML = `             <div class="text-center py-3">در حال بارگذاری آدرس...</div>
+       `;
+} else {
+console.error("User address container element not found!");
+}
+
+const staticHeader = productCardBody.querySelector(
+".table-container > .d-flex.justify-content-between.border-bottom"
+);
+if (staticHeader) {
+console.warn(
+"Static product header found during initialization. Removing it."
+);
+staticHeader.remove();
+}
+
+try {
+productsData = await fetchProducts();
+
+```
+if (productsData && productsData.length > 0) {
+  renderProducts(productsData);
+
+  deliveryDaysCardEl.style.display = "block";
+  noProductMessageEl.style.display = "none";
+
+
+  try {
+      const [deliveryDays, userAddress] = await Promise.all([
+          fetchDeliveryDays(),
+          fetchUserAddress()
+      ]);
+      renderDeliveryDays(deliveryDays);
+      renderUserAddress(userAddress);
+      loadingDeliveryDaysEl.style.display = "none";
+  } catch (fetchOtherDataError) {
+      console.error("Could not fetch delivery days or user address:", fetchOtherDataError);
+      renderDeliveryDays([]);
+      renderUserAddress(null);
+      loadingDeliveryDaysEl.style.display = "none";
+  }
+
+  try {
+      const [fetchedShipping, fetchedTax] = await Promise.all([
+          fetchShippingCost(),
+          fetchTaxCost()
+      ]);
+      shippingCost = fetchedShipping;
+      taxCost = fetchedTax;
+  } catch (costError) {
+      console.error("Could not fetch shipping or tax costs:", costError);
+      shippingCost = 0;
+      taxCost = 0;
+  }
+
+
+  updatePrices();
+} else {
+  handleNoProductState();
+  productListEl.innerHTML =
+    "<div class='text-center py-5'>محصولی برای نمایش وجود ندارد.</div>";
+}
+```
+
+} catch (error) {
+console.error(
+"Critical error during page initialization (e.g., product fetch failed):",
+error
+);
+const existingHeader = productCardBody.querySelector(
+".table-container > .d-flex.justify-content-between.border-bottom"
+);
+if (existingHeader) existingHeader.remove();
+
+```
+productListEl.innerHTML =
+  "<div class='text-center py-5 text-danger'>خطا در بارگذاری محصولات. لطفا مجددا تلاش کنید.</div>";
+loadingProductsEl.style.display = "none";
+
+handleNoProductState();
+```
+
+}
+}
+
+initializePage();
 });
