@@ -6,7 +6,7 @@ Front end developer
 
 * 🌍  I'm based in Iran
 * ✉️  You can contact me at [fardinebrahimian13@gmail.com](mailto:fardinebrahimian13@gmail.com)
-* 🧠  I'm learning React-JS
+* 🧠  I'm learning Nextjs
 
 <a href="https://www.github.com/FardinEbrahimian" target="_blank" rel="noreferrer"><img
 src="https://img.shields.io/github/followers/FardinEbrahimian?logo=github&style=for-the-badge&color=0891b2&labelColor=1c1917" /></a>
