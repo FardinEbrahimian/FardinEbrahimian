@@ -7,7 +7,7 @@
     The workflow runs on every push to main and daily; it can also be run manually from the Actions tab.
 -->
 
-<img src="assets/header-dark.svg" alt="Fardin Ebrahimian — Frontend Developer" width="100%">
+<img src="assets/header_dark.svg" alt="Fardin Ebrahimian — Frontend Developer" width="100%">
 
 <br>
 
