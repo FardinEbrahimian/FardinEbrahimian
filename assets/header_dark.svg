@@ -51,7 +51,7 @@
   <rect x="0.5" y="0.5" width="1199" height="359" rx="24" fill="none" stroke="#FFFFFF" stroke-opacity="0.09"/>
 
   <g>
-    <rect x="64" y="56" width="118" height="28" rx="14" fill="#FFFFFF" fill-opacity="0.05" stroke="#FFFFFF" stroke-opacity="0.10"/>
+    <rect x="64" y="56" width="194" height="28" rx="14" fill="#FFFFFF" fill-opacity="0.05" stroke="#FFFFFF" stroke-opacity="0.10"/>
     <circle class="dot" cx="80" cy="70" r="4" fill="#2DD4BF"/>
     <text x="93" y="74.5" class="mono" font-size="13" fill="#CBD5E1">@FardinEbrahimian</text>
   </g>
